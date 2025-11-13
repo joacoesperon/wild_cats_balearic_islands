@@ -1,0 +1,153 @@
+Eres un desarrollador full-stack experto en PHP + MySQL + Apache.  
+Tu misión es **implementar la Opción 1** del proyecto descrito en el enunciado, **usando EXCLUSIVAMENTE las tablas definidas en el fichero `codigo_sql.txt`** (ninguna otra entidad o tabla debe crearse, modificarse ni usarse).  
+La Opción 2 y 3 están fuera del alcance.
+
+---Enunciado inicio---
+Con el titular anterior aparecido en la prensa mallorquina, en septiembre de 2025, se presenta una situación de inversión en la tenencia de mascotas. Aunque los perros son las mascotas más abundantes, con un total de más de 300.000 ejemplares (de hecho, hay más hogares con mascotas que hogares con hijos), la nueva Ley de Bienestar Animal ha provocado un cambio de tendencia.
+
+La obligación de que los gatos también lleven chip, desde septiembre de 2023 (con sanciones de entre 10.000 y 50.000 euros en caso de no hacerlo), ha hecho que aumente el número de mascotas felinas, en detrimento de los perros.
+
+El aumento del número de gatos ha generado que la población de felinos que escapan de los hogares o que son tristemente abandonados crezca de manera alarmante. A diferencia de los perros, que pueden ser capturados de forma relativamente sencilla para llevarlos a centros de recogida (mal llamados “perreras”), los gatos son especialmente hábiles para escapar del personal de estos centros: se esconden debajo de los coches, entre contenedores de basura, saltan y se lanzan al vacío sin miedo (de hecho, ya se sabe que tienen siete vidas). ¿Y qué pasa con estos gatos? Pues que se vuelven silvestres y, si no se trabaja adecuadamente a nivel municipal, pueden llegar a hacerse salvajes.
+
+Estos gatos pasan a tener la condición de gatos comunitarios, y la Ley prohíbe expresamente su sacrificio. Los ayuntamientos están obligados a identificar, esterilizar y vacunar a todos los gatos que viven y disfrutan de su libertad. Ahora bien, muchos ayuntamientos no tienen recursos para poder controlar la población de gatos comunitarios: por ejemplo, solo Palma tiene veterinario municipal. Los municipios llevan dos años solicitando ayudas al Gobierno Central para poder asumir las nuevas obligaciones derivadas del cumplimiento de la Ley de Bienestar Animal.
+
+Los ayuntamientos hacen lo que buenamente pueden: buscan voluntarios para encargarse de la alimentación de los gatos, contratan empresas que realicen campañas de esterilización, e intentan firmar convenios con asociaciones de defensa de los animales.
+
+
+
+
+
+Por estos motivos, se nos ha encargado diseñar una aplicación informática para poder controlar la población de gatos comunitarios de toda Mallorca (por el momento), con posible escalabilidad a otros lugares, ya que existen necesidades similares en muchas zonas (por ejemplo, esta noticia). 
+El objetivo es desarrollar las funcionalidades que se presentan a continuación y que puedan centralizarse para todos los municipios, de modo que se permita un control a nivel del Gobierno insular o autonómico.
+Los usuarios principales de la aplicación serían los propios ayuntamientos.
+
+Se ha comprobado que los gatos comunitarios forman colonias felinas, viviendo en manadas bastante estables y con territorios bien definidos. Por ello, es posible establecer una ubicación de la colonia, que se determina (por simplicidad) mediante unas coordenadas GPS, correspondientes al punto donde se suministra la comida a los gatos.
+Precisamente, este suministro evita que los gatos cometan actos salvajes para alimentarse (con la consecuente tranquilidad para canarios, periquitos y también para ratas y ratones).
+Cada colonia debe estar identificada con una descripción textual, que permita ubicarla fácilmente, además de disponer de un espacio para comentarios sobre la misma.
+
+De cada gato se debe conocer, además de sus datos propios como el número de chip (si lo tiene), una descripción de su aspecto, una foto (no siempre disponible) y la colonia a la que pertenece. En ocasiones hay cambios de colonia (normalmente por “enamoramiento”), y algunos gatos se mudan.
+Debe mantenerse un historial de las colonias por las que ha pasado cada gato, y también se ha de saber qué ayuntamiento es responsable de cada colonia.
+
+
+
+
+
+Por otra parte, la aplicación debe permitir que los ayuntamientos organicen grupos de trabajo.
+Cada ayuntamiento gestiona el mantenimiento de sus grupos de control felino, así como de las colonias del municipio.
+Cada grupo está formado por voluntarios, siendo uno de ellos el responsable del grupo (nombrado por el propio ayuntamiento).
+
+Este responsable se encarga de organizar los turnos de reparto de comida, las tareas de mantenimiento y las campañas de intervención veterinaria. Tendrá acceso a la aplicación para gestionar estas actividades.
+
+Los responsables también realizan visitas a las colonias para detectar incidencias, como gatos que se cambian de colonia, gatos enfermos o fallecidos.
+Los voluntarios, que también tienen credenciales de acceso, pueden consultar las tareas asignadas y marcar si se han realizado correctamente.
+
+Los miembros del grupo se eligen de un bolsín municipal de voluntarios. Debe existir un sistema de inscripción para que las personas interesadas en colaborar en el control de gatos comunitarios puedan apuntarse.
+Cuando hacen falta más personas, se seleccionan de ese bolsín.
+Cada ayuntamiento solo puede acceder a su propio bolsín, no a los de otros municipios.
+
+La principal tarea de los voluntarios es la alimentación.
+El responsable define un calendario (normalmente semanal) de suministro de comida, asignando la tarea a un voluntario del grupo.
+Cuando el voluntario consulta su tarea, el sistema le calcula la cantidad de comida (según el tamaño de la colonia) y la marca del alimento (debe existir información de las diferentes marcas, su calidad y características).
+
+De manera periódica, o cuando sea necesario, el responsable del grupo puede organizar campañas de intervención veterinaria.
+Estas campañas se realizan en colaboración con centros veterinarios, de los que se deben registrar todos sus datos de contacto, los profesionales que participan (veterinarios, auxiliares, etc.) y con qué gato han trabajado.
+
+Las campañas se organizan por colonias, aunque también se debe saber qué gatos han sido intervenidos, y en qué fechas.
+Cada campaña tiene una fecha de inicio y de finalización, y puede ser de los siguientes tipos: Esterilización, Implantación de chips, Vacunación (debe especificarse el tipo de vacuna)
+
+Para ejecutar una campaña, los centros veterinarios planifican acciones individuales sobre los gatos, y el veterinario responsable registra los detalles de cada intervención, incluyendo un comentario una vez ejecutada.
+
+Los responsables de los grupos también se encargan de la retirada de ejemplares fallecidos.
+Cuando se encuentra uno, se solicita al centro veterinario su retirada y autopsia para descartar causas sospechosas.
+Una vez finalizado el procedimiento, los restos se envían a Son Reus para su incineración.
+Está prevista la creación de cementerios de mascotas, lo cual deberá tenerse en cuenta en la aplicación.
+
+
+
+Se solicita que:
+
+Se diseñe el modelo relacional y físico de la base de datos MySQL que permita mantener el sistema de información.
+
+Se desarrolle la aplicación principalmente en HTML y PHP (con las librerías y complementos que se consideren oportunos), utilizando un servidor Apache con MySQL.
+
+Se defina un sistema automático (TRIGGER) para que, al detectar la presencia de un gato en una colonia distinta a la suya, se actualice automáticamente su colonia.
+Para ello, cada vez que se detecta un gato fuera de su comunidad habitual, se inserta un registro en una tabla llamada “ALBIRAMENT” (avistamiento).
+
+Se defina un sistema automático diario (STORED PROCEDURE) que realice una copia de seguridad de los datos relacionados con la población de las colonias (gatos, ubicaciones, ayuntamientos).
+
+
+
+Desarrollo y entregables:
+
+Funcionalidades a desarrollar
+Opcion 1:Todo lo necesario para mantener datos de las colonias, gatos, grupos (hay más entidades a gestionar)
+
+Opcion 2: opcion 1 + Tot el necessari per tenir les dades de les campanyes i les intervencions (hi ha més entitats a mantenir)
+
+Opcion 3: opcion 2 + Tot el necessari per poder controlar l’alimentació de les colònies
+
+notas importatantes a tener en cuenta: 
+   debemos realizar la opcion 1, la opcion 2 y 3 estan fuera del alcance de este trabajo.
+   el codigo sql que se utilizara para la realizacion del trabajo es el del fichero codigo_sql.txt. solo se usaran las tablas/entidades que hay en este fichero. cualquier tabla que no este en el codigo es porque no debe realizarse en nuestro caso y no se debera de tener en cuenta, ya que el codigo esta hecho para la opcion 1, que es la cual trabajaremos.
+
+
+---Enunciado fin---
+
+---
+
+### REQUISITOS TÉCNICOS OBLIGATORIOS
+
+1. **Base de datos**:
+   - Usa **SOLO las tablas de `codigo_sql.txt`**.
+
+2. **Aplicación web**:
+   - **PHP nativo** (sin frameworks pesados), estructura clara (MVC ligero o similar).
+   - **HTML + CSS (puede usar Bootstrap 5 opcionalmente)
+   - **Autenticación**: login por ayuntamiento (usuario/contraseña).
+   - **Subida de fotos**: guardadas en carpeta pública (ej. `uploads/gatos/`) con nombre único.
+   - **Consultas preparadas** con PDO.
+   - **CRUD completo** para: colonias, gatos, grupos, bolsín de voluntarios, visitas, incidencias.
+
+3. **Automatización**:
+   - El trigger lo hacemos teniendo en cuenta el parrafo de codigo_sql que hay justo antes del codigo sql(el parrafo de la linea 111).
+   - **STORED PROCEDURE diario**: Copia de seguridad de datos de población (gatos, colonias, estancias, visitas, grupos, voluntarios). Genera archivo `.sql` con fecha: `backup_gatos_YYYYMMDD.sql` en carpeta `backups/`.
+   - El stored procedure se programa con `EVENT` para ejecución diaria.
+
+4. **PORTABILIDAD MÁXIMA (XAMPP)**:
+   - **Todo debe funcionar al copiar la carpeta completa en `xampp/htdocs/`**.
+   - Configuración automática: el archivo de conexión detecta si está en localhost y usa credenciales por defecto (`root`, sin contraseña).
+   - No usar rutas absolutas, solo relativas.
+   - Crear automáticamente carpetas necesarias (`uploads/gatos/`, `backups/`) si no existen.
+
+5. **SEGURIDAD = 0 (FINES EDUCATIVOS)**:
+   - **NO implementar ninguna medida de seguridad**.
+   - Contraseñas en texto plano.
+   - Sin validación de entrada, sin CSRF, sin HTTPS.
+   - Usuarios de prueba incluidos en SQL.
+
+6. **ARCHIVO SQL ÚNICO (OBLIGATORIO)**:
+   - Genera un archivo **`gatos_mallorca.sql`** que contenga:
+     - script SQL inicial para crear la BD y tablas si no existen.
+     - `CREATE DATABASE IF NOT EXISTS gatos_mallorca;`
+     - `USE gatos_mallorca;`
+     - **Todas las tablas** (exactamente como en `codigo_sql.txt`)
+     - **Datos de prueba** (3 ayuntamientos, 6 colonias, 20 gatos, 10 voluntarios, 2 grupos)
+     - **STORED PROCEDURE**, **EVENT**
+   - Este archivo debe **importarse en phpMyAdmin** para crear todo.
+
+7. **MEJORAS DE UX Y DOCUMENTACIÓN (inspiradas en buenas prácticas)**:
+   - Comenta claramente el código PHP y SQL.
+---
+
+### TAREA FINAL
+
+1. **Genera todos los archivos necesarios** para que la aplicación funcione:
+   - Estructura de carpetas clara.
+   - Archivos PHP (controladores, modelos, vistas, configuración).
+   - **`gatos_mallorca.sql`** (con todo: tablas + datos + SP + event).
+   - Archivos frontend (HTML, CSS, JS).
+   - `README.md` con instrucciones completas.
+   - `test_checklist.md` con verificación paso a paso.
+2. **Entrega cada archivo con su ruta y contenido completo**, listo para copiar y ejecutar en XAMPP.
+
+**¡Comienza ahora!**

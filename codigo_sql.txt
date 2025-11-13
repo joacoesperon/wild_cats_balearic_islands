@@ -1,0 +1,283 @@
+Introducción
+En esta práctica se pretende analizar y documentar las entidades de una Base de Datos sobre gatos silvestres, con el objetivo de diseñar un sistema que permita gestionar de manera eficiente la información relacionada con estos animales, las colonias que forman y los grupos de trabajo encargados de las tareas de mantenimiento para estos gatos (como la alimentación, etc.). 
+
+Teniendo en cuenta que la práctica ha sido realizada por tan solo 2 personas, quedarán excluidos completamente de la Base de Datos todos los datos relacionados con las campañas de intervención veterinaria, además de las distintas intervenciones y el control de alimentación de las colonias de gatos. También cabe destacar que se ha considerado la retirada y posterior autopsia de los gatos muertos en las colonias como una intervención veterinaria y, por ende, no se considerará en la Base de Datos. Aún así, las visitas para detectar incidencias realizadas por los responsables no se han considerado intervenciones, sino que simplemente se han interpretado como modificación de información relacionada directamente con los gatos y con las colonias y, por ende, sí se consideran en la Base de Datos. En adición, se destaca el hecho de que se ha supuesto que los trabajos que se mandan a los grupos son enviados por un ayuntamiento y sólo a uno de sus grupos asociados.
+
+Para terminar, el documento está estructurado de tal manera en que primero se expone el modelo relacional y luego se enseña el código SQL necesario para generar la Base de Datos. Posteriormente, se explicará detalladamente el funcionamiento de la aplicación realizada para soportar las funcionalidades que deben poderse realizar sobre la Base de Datos, incluyendo el funcionamiento de los sistemas automáticos.
+
+
+Modelo Relacional
+A continuación se presentará el modelo relacional obtenido a partir del análisis de los requisitos proporcionados en el enunciado de la práctica. Antes de todo, se ha decidido representar visualmente con un diagrama las distintas entidades y relaciones para obtener una mayor claridad de cómo se estructura el modelo obtenido, seguido de una breve explicación general de las entidades y relaciones que sean necesarias. Acto seguido se detallará el modelo relacional en profundidad y se explicarán una a una las distintas relaciones existentes y también sus atributos (en caso de que no sea ya obvio por su nombre), y también se explicarán profundamente las distintas relaciones entre las relaciones:
+
+Las entidades IncidenciaVisita, VisitaVoluntario, InteresadoBolsa y Pertenencia sirven para poder conectar las clases con las cuales están relacionadas. Por ejemplo, Pertenencia sirve para poder conectar una serie de Voluntarios a un solo Grupo, ya que, sin esta clase intermedia, no podría realizarse de manera correcta; comportamiento que es análogo para las otras entidades mencionadas anteriormente. La relación forma parte entre Gato y IncidenciaVisita representa que un gato puede formar parte de una incidencia que ocurre en una visita (es decir, que la incidencia trata sobre algo que le ha pasado a un gato, como que haya muerto por ejemplo). Las relaciones responsable que tiene Ayuntamiento representan que el ayuntamiento tiene Grupos de trabajo y Colonias que están bajo su responsabilidad. La relación pertenece y tiene que posee la entidad Ayuntamiento indica a qué Provincia éste pertenece y qué BolsaMunicipal posee. Las relaciones manda y recibe simplemente indican que el Ayuntamiento manda el Trabajo y que el Grupo de trabajo la recibe. Para terminar, las relaciones localizada en, que simplemente indican que proporcionan más información sobre la localización de la Colonia y de la Ubicacion. 
+
+A continuación, se tratarán cada una de las relaciones profundamente de forma individual, de manera en la que quedará clara tanto la información que representa la propia relación, como todos y cada uno de sus atributos y cómo se relacionan con otras relaciones.
+-Incidencia(idIncidencia, textoDescriptivo) → esta relación guarda la información de las propias incidencias que pueden llegar a producirse durante las visitas a las colonias. Se espera que se guarden en textoDescriptivo valores como “Gato enfermo”.
+
+-Visita(idVisita, fechaVisita) → en esta relación se espera guardar la información relacionada con las visitas que los voluntarios realicen sobre las colonias. Si bien no tiene demasiados atributos más que la fecha en la que se realiza la visita (fechaVisita), la relación sirve como núcleo para conectar varias relaciones.
+
+-IncidenciaVisita(idIncidenciaVisita) → relación para conectar las varias incidencias que se puedan producir en una misma visita.
+
+-R_INCIDENCIA_INCIDENCIAVISITA(idIncidencia, idIncidenciaVisita) → relación de 1..1 de IncidenciaVisita a Incidencia ya que en cada compaginación de valores de una Incidencia y de una Visita, debe haber sólo 1 Incidencia. La relación de Incidencia a IncidenciaVisita es de 0..N ya que una misma incidencia puede aparecer en entre 0 y cualquier cantidad de IncidenciaVisita.
+
+-R_VISITA_INCIDENCIAVISITA(idVisita, idIncidenciaVisita) → relación de 1..1 de IncidenciaVisita a Visita ya que en cada compaginación de valores de una Incidencia y de una Visita, debe haber sólo 1 Visita. La relación de Visita a IncidenciaVisita es de 0..N ya que una misma visita puede aparecer en entre 0 y cualquier cantidad de IncidenciaVisita (cuando hay varias incidencias en una sola visita).
+
+
+
+-Gato(idGato, nombre, sexo, descripcionAspecto, numeroChip, foto) → la relación que guarda información sobre los Gatos. Aunque no se pedía explícitamente en el enunciado, se ha optado por añadir un nombre y un sexo (que se explicará mejor en la siguiente relación) para poder interaccionar más fácilmente a los gatos.
+
+-Sexo(idSexo, sexo) → la relación que guarda información sobre el Sexo de los Gatos. Es interesante guardar esta información para evitar repetirla constantemente al crear cada una de las extensiones (instancias) de los gatos. Además, también es valioso guardar los datos del sexo ya que permiten realizar acciones como detectar qué gatos deben de recibir una posible campaña de esterilización para un sexo concreto, entre otras.
+
+-Estancia(idEstancia, fechaInicio, fechaFin) → en esta relación se espera guardar la información sobre el tiempo que ha estado un Gato en una cierta Colonia. Básicamente, funciona como una especie de historial, teniendo una fechaInicio de cuando el gato empezó a formar parte de la Colonia y un atributo opcional (puede tener o no tener valor) que es fechaFin que indica cuándo el gato abandonó la colonia.
+
+-R_SEXO_GATO(idSexo, idGato) → la relación es de 1..1 de Gato a Sexo ya que de cada gato debe guardarse sí o sí el sexo que tenga (incluso si el sexo es “Desconocido” porque aún no se ha podido determinar). La relación de Sexo a Gato es de 0..N ya que un mismo sexo puede aparecer en entre 0 y cualquier cantidad de gatos.
+
+-R_ESTANCIA_GATO(idEstancia, idGato) → la relación es de 1..1 de Estancia a Gato ya que en cada estancia debe aparecer el gato que se aloja en la Colonia. La relación de Gato a Estancia es de 0..N ya que un mismo gato puede aparecer en entre 0 y cualquier cantidad de estancias (puede haber vivido en varias colonias durante su vida).
+
+-R_INCIDENCIAVISITA_GATO(idIncidenciaVisita, idGato) → la relación es de 0..1 de IncidenciaVisita a Gato ya que en cada incidencia que pasa durante una Visita puede haber un gato que sea la víctima de dicha incidencia (como estar enfermo) o puede que sea una incidencia que no incluya a ningún gato. La relación de Gato a IncidenciaVisita es de 0..N ya que un mismo gato puede aparecer en entre 0 y cualquier cantidad de incidencias que hayan pasado en visitas (puede haber tenido varias incidencias durante su vida).
+
+
+
+-Colonia(idColonia, comentarios) → relación para guardar la información de las colonias formadas por los distintos gatos. Tiene un atributo comentarios por si se quiere incluir alguna anotación que se considere necesaria sobre esta.
+-Ubicacion(idUbicacion, textoDescriptivo) → esta relación está pensada para ofrecer información sobre la ubicación de la Colonia. Se ha decidido hacer esta relación aparte y no incluir esta información dentro de la propia relación Colonia ya que se ha determinado que la información que aquí se guarda es demasiado diferente de la demás información relevante que puede tener una colonia. El atributo textoDescriptivo está pensado para realizar indicaciones extra en caso de que la colonia sea difícil o poca intuitiva de acceder.
+
+-Coordenada(idCoordenada, latitud, longitud) → esta relación sirve para almacenar la información sobre una coordenada concreta basada en el global sistema GPS, por ende, tiene un atributo latitud y un atributo longitud. Se ha optado por no incluirlo la información presentada en esta relación dentro de Ubicacion puesto que se ha determinado que se podría llegar a dar el caso en el que haya varias Colonias que se accedan desde un mismo camino. Por ejemplo, realicemos el supuesto de que hay un camino con una trifurcación en la que cada uno de los 3 caminos lleva a una colonia distinta; entonces puede que sea interesante que, en vez de guardar 3 coordenadas distintas, se guarde tan solo la Coordenada de la trifurcación y luego, en la relación Ubicación, se realicen las 3 instancias con un textoDescriptivo que indique cuál de los 3 caminos escoger, evitando así el tener que guardar Coordenadas que puedan resultar innecesarias. De igual manera, el uso de la base de datos de esta manera es opcional y podrían crearse las 3 coordenadas para las 3 ubicaciones si así se desea.
+
+-R_UBICACION_COLONIA(idUbicacion, idColonia) → relación de 1..1 de Colonia a Ubicacion ya que cada colonia debe tener sí o sí una ubicación asociada. La relación de Ubicacion a Colonia es de 0..1 ya que una ubicación puede aparecer en 1 o ninguna colonia (para poder crear la Base de Datos). 
+
+-R_UBICACION_COORDENADA(idUbicacion, idCoordenada) → relación de 1..1 de Ubicacion a Coordenada ya que cada ubicación debe tener sí o sí unas coordenadas asociadas. La relación de Coordenada a Ubicacion es de 0..N ya que una coordenada puede aparecer en entre 0 y varias colonias. 
+
+-R_VISITA_COLONIA(idVisita, idColonia) → relación de 1..1 de Visita a Colonia ya que cada visita debe realizarse sí o sí sobre una colonia concreta. La relación de Colonia a Visita es de 0..N ya que una colonia puede aparecer en entre 0 y cualquier cantidad de visitas.
+
+-R_ESTANCIA_COLONIA(idEstancia, idColonia) → relación de 1..1 de Estancia a Colonia ya que cada estancia debe realizarse sí o sí en una colonia concreta. La relación de Colonia a Estancia es de 0..N ya que una colonia puede aparecer en entre 0 y cualquier cantidad de estancias (en un cierto momento, pueden vivir en ella entre 0 y cualquier cantidad de gatos).
+
+
+
+-Ayuntamiento(idAyuntamiento, nombreLocalidad) → relación para guardar la información de los ayuntamientos de las distintas localidades.
+
+-Provincia(idProvincia, nombreProvincia) → en esta relación se guarda la información de las distintas provincias. Principalmente se guarda el nombre de la provincia (nombreProvincia) para poder diferenciar las distintas localidades en las que están los ayuntamientos, ya que se pide que se realice el proyecto teniendo en cuenta la escalabilidad a otros posibles lugares. Por esta misma razón, es necesaria la relación Provincia para poder diferenciar los ayuntamientos que se encuentren en distintas localidades pero que tengan el mismo nombre, diferenciándose entre ellos únicamente por la provincia en la que se encuentran.
+
+-R_AYUNTAMIENTO_PROVINCIA(idAyuntamiento, idProvincia) → relación de 1..1 de Ayuntamiento a Provincia ya que cada ayuntamiento debe formar parte sí o sí de sólo una provincia. La relación de Provincia a Ayuntamiento es de 0..N ya que una provincia puede poseer entre 0 y cualquier cantidad de ayuntamientos.
+
+-R_AYUNTAMIENTO_COLONIA(idAyuntamiento, idColonia) → relación de 1..1 de Colonia a Ayuntamiento ya que cada colonia debe tener sí o sí sólo un ayuntamiento que se responsabilice de ella. La relación de Ayuntamiento a Colonia es de 0..N ya que un ayuntamiento puede ser responsable de entre 0 y cualquier cantidad de colonias.
+
+
+
+-Trabajo(idTrabajo, descripcionTrabajo, completado) → esta es la relación para guardar la información de las tareas mandadas por el Ayuntamiento a los Voluntarios. En la descripcionTrabajo se recopilan todos los requisitos que se esperan que se realicen para completar el trabajo, además de cualquier otro tipo de comentario explicativo de cualquier índole. El atributo completado sirve para poder identificar si la tarea ya se ha completado satisfactoriamente o si no lo ha hecho aún.
+
+-Grupo(idGrupo, nombreGrupo) → relación que representa un Grupo de trabajo formado por Voluntarios y del cual es responsable un Ayuntamiento. Este cuenta con un nombreGrupo para facilitar a los ayuntamientos la identificación de cada grupo del cual es responsable.
+
+-R_AYUNTAMIENTO_GRUPO(idAyuntamiento, idGrupo) → relación de 1..1 de Grupo a Ayuntamiento ya que cada grupo debe tener sí o sí sólo un ayuntamiento que se responsabilice de él. La relación de Ayuntamiento a Grupo es de 0..N ya que un ayuntamiento puede ser responsable de entre 0 y cualquier cantidad de grupos.
+
+-R_AYUNTAMIENTO_TRABAJO(idAyuntamiento, idTrabajo) → relación de 1..1 de Trabajo a Ayuntamiento ya que cada tarea debe tener sí o sí sólo un ayuntamiento que la haya mandado. La relación de Ayuntamiento a Trabajo es de 0..N ya que un ayuntamiento puede haber mandado entre 0 y cualquier cantidad de trabajos durante el transcurso del tiempo.
+
+-R_TRABAJO_GRUPO(idTrabajo, idGrupo) → relación de 1..1 de Trabajo a Grupo ya que cada tarea debe haber sido a mandada a exactamente 1 solo grupo. La relación de Grupo a Trabajo es de 0..N ya que un grupo puede haber recibido entre 0 y cualquier cantidad de trabajos durante el transcurso del tiempo.
+
+
+
+-Pertenencia(idPertenencia, es_responsable) → en esta relación se guarda la información relacionada con la pertenencia de un Voluntario a un Grupo. Básicamente es una clase para relacionar a los voluntarios con el grupo al que pertenecen, añadiendo en el proceso un atributo es_responsable para poder identificar si el voluntarios es el responsable del grupo en el que se encuentra.
+
+-Voluntario(idVoluntario, contrasenya) → relación para guardar la información de los Voluntarios, que son un Interesado que ha llegado a ser aceptado y asignado a un Grupo por el Ayuntamiento. Al ser aceptados, pasan a requerir una contraseña para poder acceder a su nueva cuenta que le da acceso a las funcionalidades de la web (toda su demás información ya se recoge en la relación Interesado y se utiliza también para crear la cuenta).
+
+-VisitaVoluntario(idVisitaVoluntario) → relación que simplemente sirve para saber qué Voluntarios forman parte de una cierta Visita en concreto.
+
+-R_VISITA_VISITAVOLUNTARIO(idVisita, idVisitaVoluntario) → relación de 1..1 de VisitaVoluntario a Visita ya que en cada conexión entre Visita y Voluntario (VisitaVoluntario) debe haber tan solo 1 visita. La relación de Visita a VisitaVoluntario es de 0..N ya que una visita puede haber sido realizado por entre 0 y cualquier cantidad de voluntarios.
+
+-R_VOLUNTARIO_VISITAVOLUNTARIO(idVoluntario, idVisitaVoluntario) → relación de 1..1 de VisitaVoluntario a Voluntario ya que en cada conexión entre Visita y Voluntario (VisitaVoluntario) debe haber tan solo 1 voluntario. La relación de Voluntario a VisitaVoluntario es de 0..N ya que un voluntario puede haber realizado entre 0 y cualquier cantidad de visitas a lo largo de su vida.
+
+-R_VOLUNTARIO_PERTENENCIA(idVoluntario, idPertenencia) → relación de 1..1 de Pertenencia a Voluntario ya que en cada conexión entre Grupo y Voluntario (Pertenencia) debe haber tan solo 1 voluntario. La relación de Voluntario a Pertenencia es de 0..N ya que un voluntario puede pertenecer a entre 0 y cualquier cantidad de grupos (aunque no sea lo más común, es posible que un voluntario forme parte de varios grupos a la vez [como, por ejemplo, si este tiene 2 casas en localidades diferentes y quiere formar parte de un grupo en ambas localidades; también podría darse que, por alguna razón en concreto, el voluntario se encuentre en 2 grupos de la misma localidad si se encargan de tareas diferentes o si hay falta de personal]).
+
+-R_GRUPO_PERTENENCIA(idGrupo, idPertenencia) → relación de 1..1 de Pertenencia a Grupo ya que en cada conexión entre Grupo y Voluntario (Pertenencia) debe haber tan solo 1 grupo. La relación de Grupo a Pertenencia es de 0..N ya que a un grupo pueden pertenecer entre 0 y cualquier cantidad de voluntarios.
+
+
+
+-BolsaMunicipal(idBolsaMunicipal) → en esta relación se guarda la información relacionada con la Bolsa Municipal de Interesados que se encuentran en lista de espera para participar en las actividades para el bienestar de los gatos silvestres. Cada Ayuntamiento tiene la suya propia y la información que en ella se guarda puede tan solo ser accedida por su Ayuntamiento responsable.
+
+-InteresadoBolsa(idInteresadoBolsa) → relación cuya funcionalidad principal es relacionar todos los Interesados con las BolsasMunicipales en las que se encuentran inscritos.
+
+-Interesado(idInteresado, DNI, nombreCompleto, email, telefono) → esta relación sirve para guardar la información de los interesados en formar parte de las distintas tareas relacionadas con mejorar el bienestar de los gatos silvestres. La relación contiene simplemente información básica de identificación de la persona interesada además de alguna información para facilitar el contacto con esta (el email y telefono).
+
+-R_AYUNTAMIENTO_BOLSAMUNICIPAL(idAyuntamiento, idBolsaMunicipal) → relación de 1..1 de BolsaMunicipal a Ayuntamiento ya que cada bolsa municipal debe tener sí o sí sólo un ayuntamiento que la posea. La relación de Ayuntamiento a BolsaMunicipal es de 0..1 ya que un ayuntamiento puede tener 0 o 1 bolsa municipal asociada (para poder crear la Base de Datos).
+
+-R_INTERESADOBOLSA_BOLSAMUNICIPAL(idInteresadoBolsa, idBolsaMunicipal) → relación de 1..1 de InteresadoBolsa a BolsaMunicipal ya que cada relación entre Interesado y BolsaMunicipal (InteresadoBolsa) debe tener sí o sí sólo una bolsa municipal a la que pertenezca el interesado. La relación de BolsaMunicipal a InteresadoBolsa es de 0..N ya que una bolsa municipal puede tener entre 0 y cualquier cantidad de interesados en la lista de espera.
+
+-R_INTERESADOBOLSA_INTERESADO(idInteresadoBolsa, idInteresado) → relación de 1..1 de InteresadoBolsa a Interesado ya que cada relación entre Interesado y BolsaMunicipal (InteresadoBolsa) debe tener sí o sí sólo un interesado que se asocie a la bolsa municipal en cada instancia. La relación de Interesado a InteresadoBolsa es de 0..N ya que un interesado puede encontrarse apuntado en entre 0 y cualquier cantidad de bolsas municipales.
+
+-R_VOLUNTARIO_INTERESADO(idVoluntario, idInteresado) → relación de 1..1 de Voluntario a Interesado ya que cada voluntario debe sí o sí haber sido antes 1 interesado que se apuntó a la BolsaMunicipal del Ayuntamiento. La relación de Interesado a Voluntario es de 0..1 ya que un interesado puede haber sido aceptado como voluntario (1) o aún mantenerse en la lista de espera sin haber sido aún aceptado (0). 
+
+
+Cabe destacar que muchas de las relaciones entre relaciones que contienen un “0”, como podría ser la relación desde Ubicación hacia Colonia que es 0..1, tienen ese 0 para que la creación de la Base de Datos sea posible. Siguiendo el ejemplo, lo lógico sería que la relación entre ambas fuera 1..1 en ambas direcciones porque, sólo se crea una ubicación para que indique la posición de una colonia (1..1) y cada colonia debería tener una ubicación asociada para saber dónde se encuentra (1..1). Este diseño imposibilitaría la creación de la Base de Datos puesto que, si intentamos crear una Ubicacion, se nos requeriría introducir una Colonia y, si intentamos crear una Colonia, se nos pediría introducir una Ubicacion; por ende, no se nos permitiría crear ninguna instancia para ninguna de las dos relaciones. De esta manera, introducir un “0” al principio de una de las dos direcciones de la relación, nos permite que una de las relaciones sea opcional a la hora de crear una instancia en la otra relación y que, por ende, se puede crear la instancia de la otra clase.
+
+Para terminar, se aclarará la aparente inexistencia de la entidad ALBIRAMENT. Esta entidad se menciona en el enunciado y el objetivo de su existencia es que, al identificar a un Gato en una Colonia distinta a la que solía encontrarse anteriormente, se produzca un cambio sobre la Colonia en la que está asignado (el Gato empieza a formar parte de la otra Colonia y se desasigna de la Colonia en la que se encontraba anteriormente). Se ha considerado que en nuestro modelo tiene más sentido adaptar el funcionamiento de la entidad ALBIRAMENT sobre al modelo que ya está hecho, en vez de crear otra entidad completamente nueva. Más específicamente, se ha decidido aplicar dicha funcionalidad a la entidad Estancia ya que funciona como un historial; de esta manera, al detectar a un Gato en otra Colonia, simplemente se debería actualizar el campo fechaFin de la Estancia actual del gato poniendo la fecha del avistamiento (acaba la estancia del gato en su colonia antigua) y se crearía una nueva Estancia con ese mismo gato y la nueva colonia a la que pertenece, cuya fechaInicio sería la misma fecha del avistamiento del gato en la nueva colonia. De esta manera, se conseguiría un comportamiento análogo al esperado por parte de la entidad ALBIRAMENT pero desde la entidad Estancia, la cual ya forma parte de nuestro modelo.
+
+
+
+Código SQL generador de la Base de Datos
+
+A continuación se aportará el código que permite crear la Base de Datos descrita anteriormente mediante MySQL:
+
+CREATE DATABASE IF NOT EXISTS gatos_silvestres;
+USE gatos_silvestres;
+
+-- Tabla para almacenar las posibles incidencias ocurridas durante visitas a colonias
+CREATE TABLE Incidencia (
+    idIncidencia INT AUTO_INCREMENT PRIMARY KEY,
+    textoDescriptivo TEXT NOT NULL
+);
+
+-- Tabla para registrar las visitas a las colonias
+CREATE TABLE Visita (
+    idVisita INT AUTO_INCREMENT PRIMARY KEY,
+    fechaVisita DATE NOT NULL,
+    idColonia INT NOT NULL,
+    FOREIGN KEY (idColonia) REFERENCES Colonia(idColonia) ON DELETE CASCADE
+);
+
+-- Tabla para conectar las incidencias ocurridas con la respectiva visita
+CREATE TABLE IncidenciaVisita (
+    idIncidenciaVisita INT AUTO_INCREMENT PRIMARY KEY,
+    idIncidencia INT NOT NULL,
+    idVisita INT NOT NULL,
+    idGato INT,
+    FOREIGN KEY (idIncidencia) REFERENCES Incidencia(idIncidencia) ON DELETE CASCADE,
+    FOREIGN KEY (idVisita) REFERENCES Visita(idVisita) ON DELETE CASCADE,
+    FOREIGN KEY (idGato) REFERENCES Gato(idGato) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar la información de los gatos silvestres
+CREATE TABLE Gato (
+    idGato INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(30),
+    descripcionAspecto TEXT,
+    numeroChip VARCHAR(15),
+    foto VARCHAR(255),
+    idSexo INT NOT NULL,
+    FOREIGN KEY (idSexo) REFERENCES Sexo(idSexo) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar la información del sexo de los gatos
+CREATE TABLE Sexo(
+    idSexo INT AUTO_INCREMENT PRIMARY KEY,
+    sexo VARCHAR(30),
+);
+
+-- Tabla para registrar el historial de las estancias de los gatos en las colonias
+CREATE TABLE Estancia (
+    idEstancia INT AUTO_INCREMENT PRIMARY KEY,
+    fechaInicio DATE NOT NULL,
+    fechaFin DATE,
+    idGato INT NOT NULL,
+    idColonia INT NOT NULL,
+    FOREIGN KEY (idGato) REFERENCES Gato(idGato) ON DELETE CASCADE,
+    FOREIGN KEY (idColonia) REFERENCES Colonia(idColonia) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar la información de las colonias de gatos
+CREATE TABLE Colonia (
+    idColonia INT AUTO_INCREMENT PRIMARY KEY,
+    comentarios TEXT,
+    idUbicacion INT NOT NULL,
+    idAyuntamiento INT NOT NULL,
+    FOREIGN KEY (idUbicacion) REFERENCES Ubicacion(idUbicacion) ON DELETE CASCADE,
+    FOREIGN KEY (idAyuntamiento) REFERENCES Ayuntamiento(idAyuntamiento) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar información de las ubicaciones de las colonias
+CREATE TABLE Ubicacion (
+    idUbicacion INT AUTO_INCREMENT PRIMARY KEY,
+    textoDescriptivo TEXT NOT NULL,
+    idCoordenada INT NOT NULL,
+    FOREIGN KEY (idCoordenada) REFERENCES Coordenada(idCoordenada) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar coordenadas GPS
+CREATE TABLE Coordenada (
+    idCoordenada INT AUTO_INCREMENT PRIMARY KEY,
+    latitud DECIMAL(3,6) NOT NULL,
+    longitud DECIMAL(3,6) NOT NULL
+);
+
+-- Tabla para almacenar la información de los ayuntamientos
+CREATE TABLE Ayuntamiento (
+    idAyuntamiento INT AUTO_INCREMENT PRIMARY KEY,
+    nombreLocalidad VARCHAR(70) NOT NULL,
+    idProvincia INT NOT NULL,
+    FOREIGN KEY (idProvincia) REFERENCES Provincia(idProvincia) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar la información de las provincias
+CREATE TABLE Provincia (
+    idProvincia INT AUTO_INCREMENT PRIMARY KEY,
+    nombreProvincia VARCHAR(70) NOT NULL
+);
+
+-- Tabla para registrar trabajos asignados por ayuntamientos a grupos
+CREATE TABLE Trabajo (
+    idTrabajo INT AUTO_INCREMENT PRIMARY KEY,
+    descripcionTrabajo TEXT NOT NULL,
+    completado BOOLEAN NOT NULL,
+    idAyuntamiento INT NOT NULL,
+    idGrupo INT NOT NULL,
+    FOREIGN KEY (idAyuntamiento) REFERENCES Ayuntamiento(idAyuntamiento) ON DELETE CASCADE,
+    FOREIGN KEY (idGrupo) REFERENCES Grupo(idGrupo) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar grupos de trabajo gestionados por ayuntamientos
+CREATE TABLE Grupo (
+    idGrupo INT AUTO_INCREMENT PRIMARY KEY,
+    nombreGrupo VARCHAR(50) NOT NULL,
+    idAyuntamiento INT NOT NULL,
+    FOREIGN KEY (idAyuntamiento) REFERENCES Ayuntamiento(idAyuntamiento) ON DELETE CASCADE
+);
+
+-- Tabla para registrar la pertenencia de voluntarios a grupos, con rol de responsable
+CREATE TABLE Pertenencia (
+    idPertenencia INT AUTO_INCREMENT PRIMARY KEY,
+    es_responsable BOOLEAN NOT NULL,
+    idVoluntario INT NOT NULL,
+    idGrupo INT NOT NULL,
+    FOREIGN KEY (idVoluntario) REFERENCES Voluntario(idVoluntario) ON DELETE CASCADE,
+    FOREIGN KEY (idGrupo) REFERENCES Grupo(idGrupo) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar la información de los voluntarios aceptados
+CREATE TABLE Voluntario (
+    idVoluntario INT AUTO_INCREMENT PRIMARY KEY,
+    contrasenya VARCHAR(255) NOT NULL,
+    idInteresado INT NOT NULL,
+    FOREIGN KEY (idInteresado) REFERENCES Interesado(idInteresado) ON DELETE CASCADE
+);
+
+-- Tabla para conectar los voluntarios con las visitas que han realizado
+CREATE TABLE VisitaVoluntario (
+    idVisitaVoluntario INT AUTO_INCREMENT PRIMARY KEY,
+    idVisita INT NOT NULL,
+    idVoluntario INT NOT NULL,
+    FOREIGN KEY (idVisita) REFERENCES Visita(idVisita) ON DELETE CASCADE,
+    FOREIGN KEY (idVoluntario) REFERENCES Voluntario(idVoluntario) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar las bolsas municipales de interesados
+CREATE TABLE BolsaMunicipal (
+    idBolsaMunicipal INT AUTO_INCREMENT PRIMARY KEY,
+    idAyuntamiento INT NOT NULL,
+    FOREIGN KEY (idAyuntamiento) REFERENCES Ayuntamiento(idAyuntamiento) ON DELETE CASCADE
+);
+
+-- Tabla para conectar los interesados con las bolsas municipales a las que estan inscritos
+CREATE TABLE InteresadoBolsa (
+    idInteresadoBolsa INT AUTO_INCREMENT PRIMARY KEY,
+    idBolsaMunicipal INT NOT NULL,
+    idInteresado INT NOT NULL,
+    FOREIGN KEY (idBolsaMunicipal) REFERENCES BolsaMunicipal(idBolsaMunicipal) ON DELETE CASCADE,
+    FOREIGN KEY (idInteresado) REFERENCES Interesado(idInteresado) ON DELETE CASCADE
+);
+
+-- Tabla para almacenar información de los interesados
+CREATE TABLE Interesado (
+    idInteresado INT AUTO_INCREMENT PRIMARY KEY,
+    DNI VARCHAR(20) NOT NULL,
+    nombreCompleto VARCHAR(50) NOT NULL,
+    email VARCHAR(70) NOT NULL,
+    telefono VARCHAR(20)
+);
