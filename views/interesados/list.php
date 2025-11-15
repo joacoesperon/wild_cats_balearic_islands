@@ -40,11 +40,22 @@
                         <td><?php echo htmlspecialchars($interesado->email); ?></td>
                         <td><?php echo htmlspecialchars($interesado->telefono ?? 'N/A'); ?></td>
                         <td>
-                            <?php if ($interesado->es_voluntario): ?>
-                                <span class="badge bg-success">Voluntario Activo</span>
-                            <?php else: ?>
-                                <span class="badge bg-info">Interesado</span>
-                            <?php endif; ?>
+                            <?php
+                                $estado = $interesado->estado;
+                                $badge_class = '';
+                                switch ($estado) {
+                                    case 'Voluntario Activo':
+                                        $badge_class = 'bg-success';
+                                        break;
+                                    case 'Voluntario Inactivo':
+                                        $badge_class = 'bg-secondary';
+                                        break;
+                                    default:
+                                        $badge_class = 'bg-info';
+                                        break;
+                                }
+                            ?>
+                            <span class="badge <?php echo $badge_class; ?>"><?php echo htmlspecialchars($estado); ?></span>
                         </td>
                         <td>
                             <a href="<?php echo url('interesados/edit?id=' . htmlspecialchars($interesado->idInteresado)); ?>" class="btn btn-warning btn-sm">Editar</a>
@@ -52,7 +63,7 @@
                                 <input type="hidden" name="idInteresado" value="<?php echo htmlspecialchars($interesado->idInteresado); ?>">
                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar a este interesado? Si es voluntario, también se eliminará su registro como voluntario.');">Eliminar</button>
                             </form>
-                            <?php if (!$interesado->es_voluntario): ?>
+                            <?php if ($interesado->estado === 'Interesado'): ?>
                                 <!-- Botón para aceptar como voluntario, que podría abrir un modal para pedir usuario/contraseña -->
                                 <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#acceptVolunteerModal" data-id="<?php echo htmlspecialchars($interesado->idInteresado); ?>" data-nombre="<?php echo htmlspecialchars($interesado->nombreCompleto); ?>">
                                     Aceptar como Voluntario

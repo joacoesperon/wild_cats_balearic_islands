@@ -173,4 +173,40 @@ class Incidencia extends BaseModel {
         ";
         return $this->executeQuery($query, [':idVisita' => $idVisita]);
     }
+
+    // --- Métodos para CRUD de Tipos de Incidencia ---
+
+    public function getTipos() {
+        $query = "SELECT * FROM " . $this->table_name . " ORDER BY textoDescriptivo ASC";
+        return $this->executeQuery($query);
+    }
+
+    public function getTipoById($id) {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE idIncidencia = :id LIMIT 0,1";
+        return $this->executeQuery($query, [':id' => $id], false);
+    }
+
+    public function createTipo($textoDescriptivo) {
+        $query = "INSERT INTO " . $this->table_name . " (textoDescriptivo) VALUES (:textoDescriptivo)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':textoDescriptivo', $textoDescriptivo);
+        return $stmt->execute();
+    }
+
+    public function updateTipo($id, $textoDescriptivo) {
+        $query = "UPDATE " . $this->table_name . " SET textoDescriptivo = :textoDescriptivo WHERE idIncidencia = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':textoDescriptivo', $textoDescriptivo);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
+
+    public function deleteTipo($id) {
+        // Nota: Esto fallará si el tipo de incidencia está en uso en IncidenciaVisita
+        // debido a las restricciones de clave foránea. La UI debería manejar esto.
+        $query = "DELETE FROM " . $this->table_name . " WHERE idIncidencia = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
 }

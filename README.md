@@ -82,15 +82,39 @@ Debido a limitaciones de seguridad de MySQL, un `STORED PROCEDURE` no puede gene
 
 La **generación real de archivos `.sql` de backup** se realiza a través de la funcionalidad de backup manual en la aplicación web. Esta funcionalidad utiliza `mysqldump` (con detección de sistema operativo para asegurar la portabilidad en XAMPP para Linux, macOS y Windows) para crear un archivo `.sql` completo de la base de datos. Este enfoque permite al usuario generar backups bajo demanda y gestionar los archivos resultantes (descargar, eliminar).
 
-## Notas sobre el TRIGGER de ALBIRAMENT
+## Nota sobre la Gestión del Historial de Estancias (ALBIRAMENT)
 
-La funcionalidad de "ALBIRAMENT" (detección de un gato en una colonia distinta a la suya y actualización de su estancia) se implementa mediante un **TRIGGER de base de datos** llamado `trg_after_insert_estancia`.
+El enunciado del proyecto requería un sistema automático (sugerido como un `TRIGGER`) para gestionar el cambio de colonia de un gato, actualizando su historial en la tabla `Estancia`.
 
-Este `TRIGGER` se ejecuta **después de cada inserción (`AFTER INSERT`) en la tabla `Estancia`**. Su lógica es la siguiente:
-1.  Cuando se inserta una nueva `Estancia` para un gato (indicando que se ha movido a una nueva colonia), el `TRIGGER` busca la `Estancia` **previamente activa** de ese mismo gato (aquella cuya `fechaFin` es `NULL`).
-2.  A esa `Estancia` anterior, le actualiza su campo `fechaFin` con la `fechaInicio` de la `Estancia` recién insertada. Esto marca el fin de la estancia del gato en la colonia antigua.
+**Decisión de Diseño Final:**
 
-**Importante:** Para evitar duplicidad de lógica y posibles conflictos, la aplicación PHP (específicamente el método `updateGato` en `models/Gato.php`) ya **no contiene la lógica para finalizar la estancia anterior**. Esta responsabilidad ha sido delegada completamente al `TRIGGER` de la base de datos.
+Durante la implementación, se detectó que el uso de un `TRIGGER` en la tabla `Estancia` (tanto `BEFORE INSERT` como `AFTER INSERT`) para actualizar la misma tabla `Estancia` provocaba un error irresoluble de MySQL:
+> **Error 1442: Can't update table 'Estancia' in stored function/trigger because it is already used by statement which invoked this stored function/trigger.**
+
+Este error es una limitación fundamental de MySQL para prevenir recursiones y bloqueos.
+
+Para cumplir con el requisito funcional (mantener un historial correcto de estancias) y garantizar la estabilidad de la aplicación, se tomó la siguiente decisión:
+1.  **Se eliminó el `TRIGGER`** de la base de datos.
+2.  La lógica para finalizar la estancia antigua (`UPDATE`) y crear la nueva (`INSERT`) se ha implementado directamente en la aplicación PHP, dentro de una **transacción de base de datos** en el método `updateGato` del modelo `models/Gato.php`.
+
+Este enfoque garantiza que la operación sea atómica (o todo se ejecuta o nada lo hace) y cumple con el comportamiento requerido en el enunciado, aunque la implementación se realice en la capa de aplicación en lugar de en la capa de base de datos para sortear una limitación técnica de MySQL.
+
+## Sistema de Estado de Voluntarios
+
+Se ha implementado un sistema de estado dinámico para los voluntarios que se muestra en la sección "Bolsín de Voluntarios". El estado de una persona se determina automáticamente en tiempo real según las siguientes reglas:
+
+-   **Interesado**: Una persona que se ha registrado en el bolsín pero aún no ha sido aceptada como voluntario.
+-   **Voluntario Inactivo**: Una persona que ha sido aceptada como voluntario pero que actualmente no está asignada a ningún grupo de trabajo.
+-   **Voluntario Activo**: Un voluntario que está asignado a, al menos, un grupo de trabajo.
+
+Este estado se actualiza visualmente de forma automática cada vez que se visita la página del bolsín, reflejando si un voluntario ha sido añadido o eliminado de un grupo.
+
+## Refactorización de Incidencias
+
+La sección de 'Incidencias' ha sido dividida en dos páginas para mayor claridad:
+
+1.  **Incidencias Ocurridas**: Un listado histórico de todas las incidencias que han sido registradas durante las visitas. Permite ver qué pasó, cuándo y dónde.
+2.  **Gestión de Tipos**: (Solo para Ayuntamientos) Un CRUD simple para administrar los *tipos* de incidencias que pueden ser seleccionados al registrar una nueva ocurrencia. Por ejemplo: 'Gato enfermo', 'Falta de comida', etc.
 
 ## Contacto
 

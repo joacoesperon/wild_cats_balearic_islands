@@ -119,7 +119,7 @@ class Gato extends BaseModel {
         try {
             $this->conn->beginTransaction();
 
-            // 1. Actualizar Gato
+            // 1. Actualizar los datos principales del gato
             $queryGato = "UPDATE Gato SET nombre = :nombre, descripcionAspecto = :descripcionAspecto, numeroChip = :numeroChip, foto = :foto, idSexo = :idSexo WHERE idGato = :idGato";
             $stmtGato = $this->conn->prepare($queryGato);
             $stmtGato->bindParam(':nombre', $nombre);
@@ -130,12 +130,18 @@ class Gato extends BaseModel {
             $stmtGato->bindParam(':idGato', $idGato);
             $stmtGato->execute();
 
-            // 2. Actualizar Estancia si la colonia ha cambiado
+            // 2. Gestionar el cambio de colonia si ha cambiado
             if ($newIdColonia != $oldIdColonia) {
-                // La lógica para finalizar la estancia antigua ahora se maneja mediante un TRIGGER en la base de datos.
-                // Solo necesitamos insertar la nueva estancia.
+                // Finalizar la estancia activa anterior, si existía
+                if ($oldIdColonia) {
+                    $queryEndEstancia = "UPDATE Estancia SET fechaFin = CURDATE() WHERE idGato = :idGato AND idColonia = :oldIdColonia AND fechaFin IS NULL";
+                    $stmtEndEstancia = $this->conn->prepare($queryEndEstancia);
+                    $stmtEndEstancia->bindParam(':idGato', $idGato);
+                    $stmtEndEstancia->bindParam(':oldIdColonia', $oldIdColonia);
+                    $stmtEndEstancia->execute();
+                }
 
-                // Iniciar nueva estancia
+                // Iniciar una nueva estancia si se ha asignado una nueva colonia
                 if ($newIdColonia) {
                     $queryNewEstancia = "INSERT INTO Estancia (fechaInicio, idGato, idColonia) VALUES (CURDATE(), :idGato, :idColonia)";
                     $stmtNewEstancia = $this->conn->prepare($queryNewEstancia);

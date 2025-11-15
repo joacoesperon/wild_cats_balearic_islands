@@ -6,22 +6,24 @@ class InteresadoController {
     private $voluntarioModel; // Para convertir interesados en voluntarios
 
     public function __construct() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden gestionar interesados
         $this->interesadoModel = new Interesado();
-        $this->voluntarioModel = new Voluntario();
+        $this->voluntarioModel = new Voluntario(); // Para convertir interesados en voluntarios
     }
 
     public function index() {
+        AuthController::checkAyuntamientoAuth();
         $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
         $interesados = $this->interesadoModel->getAllByAyuntamiento($ayuntamiento_id);
         require_once __DIR__ . '/../views/interesados/list.php';
     }
 
     public function create() {
+        AuthController::checkAyuntamientoAuth();
         require_once __DIR__ . '/../views/interesados/form.php';
     }
 
     public function store() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $DNI = $_POST['DNI'] ?? null;
             $nombreCompleto = $_POST['nombreCompleto'] ?? null;
@@ -42,6 +44,7 @@ class InteresadoController {
     }
 
     public function edit() {
+        AuthController::checkAyuntamientoAuth();
         $id = $_GET['id'] ?? null;
         if ($id && $this->interesadoModel->belongsToAyuntamiento($id, $_SESSION['ayuntamiento_id'])) {
             $interesado = $this->interesadoModel->getById($id);
@@ -56,6 +59,7 @@ class InteresadoController {
     }
 
     public function update() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idInteresado = $_POST['idInteresado'] ?? null;
             $DNI = $_POST['DNI'] ?? null;
@@ -80,6 +84,7 @@ class InteresadoController {
     }
 
     public function delete() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idInteresado = $_POST['idInteresado'] ?? null;
 
@@ -98,6 +103,7 @@ class InteresadoController {
     }
 
     public function accept() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idInteresado = $_POST['idInteresado'] ?? null;
             $usuario = $_POST['usuario'] ?? null;
@@ -138,6 +144,72 @@ class InteresadoController {
             }
         }
         header('Location: ' . url('interesados'));
+        exit();
+    }
+
+    /**
+     * Muestra la pantalla de bienvenida para la inscripción pública.
+     */
+    public function publicWelcome() {
+        require_once __DIR__ . '/../views/interesados/welcome.php';
+    }
+
+    /**
+     * Muestra el formulario público de inscripción de interesados.
+     */
+    public function publicCreate() {
+        $ayuntamientoModel = new Ayuntamiento(); // Necesitamos el modelo de Ayuntamiento
+        $ayuntamientos = $ayuntamientoModel->getAll(); // Obtener todos los ayuntamientos
+        $interesado = new stdClass(); // Objeto vacío para el formulario
+        require_once __DIR__ . '/../views/interesados/public_form.php';
+    }
+
+    /**
+     * Almacena un nuevo interesado desde el formulario público.
+     */
+    public function publicStore() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $DNI = $_POST['DNI'] ?? null;
+            $nombreCompleto = $_POST['nombreCompleto'] ?? null;
+            $email = $_POST['email'] ?? null;
+            $telefono = $_POST['telefono'] ?? null;
+            $idAyuntamiento = $_POST['idAyuntamiento'] ?? null;
+
+            // Validaciones básicas
+            if (empty($DNI) || empty($nombreCompleto) || empty($email) || empty($idAyuntamiento)) {
+                $_SESSION['error_message'] = 'Por favor, rellena todos los campos obligatorios.';
+                header('Location: ' . url('interesados/public_create'));
+                exit();
+            }
+
+            // Crear el interesado
+            $idInteresado = $this->interesadoModel->createInteresadoPublic($DNI, $nombreCompleto, $email, $telefono);
+
+            if ($idInteresado) {
+                // Asociar al interesado con la Bolsa Municipal del Ayuntamiento seleccionado
+                $bolsaMunicipalModel = new BolsaMunicipal();
+                $bolsa = $bolsaMunicipalModel->findByAyuntamientoId($idAyuntamiento);
+
+                if ($bolsa) {
+                    $this->interesadoModel->addInteresadoToBolsa($idInteresado, $bolsa->idBolsaMunicipal);
+                    $_SESSION['success_message'] = 'Tu solicitud ha sido enviada. Nos pondremos en contacto contigo pronto.';
+                    header('Location: ' . url('login'));
+                    exit();
+                } else {
+                    // Esto no debería pasar si el ayuntamiento existe, pero por seguridad
+                    $_SESSION['error_message'] = 'Error: No se encontró la bolsa municipal para el ayuntamiento seleccionado.';
+                    // Eliminar interesado si no se pudo añadir a la bolsa
+                    $this->interesadoModel->deleteInteresado($idInteresado);
+                    header('Location: ' . url('interesados/public_create'));
+                    exit();
+                }
+            } else {
+                $_SESSION['error_message'] = 'Error al enviar tu solicitud.';
+                header('Location: ' . url('interesados/public_create'));
+                exit();
+            }
+        }
+        header('Location: ' . url('interesados/public_create'));
         exit();
     }
 }

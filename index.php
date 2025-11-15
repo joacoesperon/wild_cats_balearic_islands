@@ -78,6 +78,7 @@ $routes = [
     'gatos/edit' => ['controller' => 'GatoController', 'method' => 'edit'],
     'gatos/update' => ['controller' => 'GatoController', 'method' => 'update'],
     'gatos/delete' => ['controller' => 'GatoController', 'method' => 'delete'],
+    'gatos/ajax_get_by_colonia' => ['controller' => 'GatoController', 'method' => 'ajaxGetByColonia'],
 
     // Rutas para Grupos
     'grupos' => ['controller' => 'GrupoController', 'method' => 'index'],
@@ -99,6 +100,11 @@ $routes = [
     'interesados/update' => ['controller' => 'InteresadoController', 'method' => 'update'],
     'interesados/delete' => ['controller' => 'InteresadoController', 'method' => 'delete'],
     'interesados/accept' => ['controller' => 'InteresadoController', 'method' => 'accept'], // Para convertir en voluntario
+
+    // Rutas públicas para inscripción de voluntarios
+    'interesados/public_welcome' => ['controller' => 'InteresadoController', 'method' => 'publicWelcome'],
+    'interesados/public_create' => ['controller' => 'InteresadoController', 'method' => 'publicCreate'],
+    'interesados/public_store' => ['controller' => 'InteresadoController', 'method' => 'publicStore'],
 
     // Rutas para Voluntarios (ya aceptados)
     'voluntarios' => ['controller' => 'VoluntarioController', 'method' => 'index'],
@@ -125,14 +131,20 @@ $routes = [
     'visitas/update' => ['controller' => 'VisitaController', 'method' => 'update'],
     'visitas/delete' => ['controller' => 'VisitaController', 'method' => 'delete'],
 
-    // Rutas para Incidencias
-    'incidencias' => ['controller' => 'IncidenciaController', 'method' => 'index'],
-    'incidencias/create' => ['controller' => 'IncidenciaController', 'method' => 'create'],
-    'incidencias/store' => ['controller' => 'IncidenciaController', 'method' => 'store'],
-    'incidencias/show' => ['controller' => 'IncidenciaController', 'method' => 'show'],
-    'incidencias/edit' => ['controller' => 'IncidenciaController', 'method' => 'edit'],
-    'incidencias/update' => ['controller' => 'IncidenciaController', 'method' => 'update'],
-    'incidencias/delete' => ['controller' => 'IncidenciaController', 'method' => 'delete'],
+    // Rutas para Incidencias Ocurridas
+    'ocurrencias' => ['controller' => 'OcurrenciaController', 'method' => 'index'],
+    'ocurrencias/show' => ['controller' => 'OcurrenciaController', 'method' => 'show'],
+    'ocurrencias/edit' => ['controller' => 'OcurrenciaController', 'method' => 'edit'],
+    'ocurrencias/update' => ['controller' => 'OcurrenciaController', 'method' => 'update'],
+    'ocurrencias/delete' => ['controller' => 'OcurrenciaController', 'method' => 'delete'],
+
+    // Rutas para Tipos de Incidencia
+    'tipos_incidencia' => ['controller' => 'TipoIncidenciaController', 'method' => 'index'],
+    'tipos_incidencia/create' => ['controller' => 'TipoIncidenciaController', 'method' => 'create'],
+    'tipos_incidencia/store' => ['controller' => 'TipoIncidenciaController', 'method' => 'store'],
+    'tipos_incidencia/edit' => ['controller' => 'TipoIncidenciaController', 'method' => 'edit'],
+    'tipos_incidencia/update' => ['controller' => 'TipoIncidenciaController', 'method' => 'update'],
+    'tipos_incidencia/delete' => ['controller' => 'TipoIncidenciaController', 'method' => 'delete'],
 
     // Rutas para Backups
     'backups' => ['controller' => 'BackupController', 'method' => 'index'],

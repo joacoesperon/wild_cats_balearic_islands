@@ -164,4 +164,25 @@ class Colonia extends BaseModel {
             return false;
         }
     }
+
+    /**
+     * Obtiene las colonias que un voluntario responsable puede visitar.
+     * @param int $idVoluntario
+     * @return array
+     */
+    public function getColoniasForResponsable($idVoluntario) {
+        $query = "
+            SELECT DISTINCT c.idColonia, c.descripcion, a.nombreLocalidad AS ayuntamiento_nombre
+            FROM Colonia c
+            JOIN Ayuntamiento a ON c.idAyuntamiento = a.idAyuntamiento
+            WHERE c.idAyuntamiento IN (
+                SELECT DISTINCT g.idAyuntamiento
+                FROM Grupo g
+                JOIN Pertenencia p ON g.idGrupo = p.idGrupo
+                WHERE p.idVoluntario = :idVoluntario AND p.es_responsable = 1
+            )
+            ORDER BY c.descripcion ASC
+        ";
+        return $this->executeQuery($query, [':idVoluntario' => $idVoluntario]);
+    }
 }

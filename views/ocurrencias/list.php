@@ -1,7 +1,7 @@
 <?php require_once __DIR__ . '/../partials/header.php'; ?>
 
 <div class="container">
-    <h1>Gestión de Incidencias</h1>
+    <h1>Incidencias Ocurridas</h1>
 
     <?php if (isset($_SESSION['success_message'])): ?>
         <div class="alert alert-success" role="alert">
@@ -14,9 +14,7 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
-        <a href="<?php echo url('incidencias/create'); ?>" class="btn btn-primary mb-3">Registrar Nueva Incidencia</a>
-    <?php endif; ?>
+    <?php /* Botón "Registrar Nueva Incidencia" eliminado según la nueva lógica de creación a través de Visitas */ ?>
 
     <?php if (empty($incidencias)): ?>
         <div class="alert alert-info" role="alert">
@@ -43,10 +41,10 @@
                         <td><?php echo htmlspecialchars($incidencia->colonia_nombre); ?></td>
                         <td><?php echo htmlspecialchars($incidencia->gato_nombre ?? 'N/A'); ?></td>
                         <td>
-                            <a href="<?php echo url('incidencias/show?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-info btn-sm">Ver</a>
+                            <a href="<?php echo url('ocurrencias/show?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-info btn-sm">Ver</a>
                             <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
-                                <a href="<?php echo url('incidencias/edit?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-warning btn-sm">Editar</a>
-                                <form action="<?php echo url('incidencias/delete'); ?>" method="POST" style="display:inline-block;">
+                                <a href="<?php echo url('ocurrencias/edit?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-warning btn-sm">Editar</a>
+                                <form action="<?php echo url('ocurrencias/delete'); ?>" method="POST" style="display:inline-block;">
                                     <input type="hidden" name="idIncidencia" value="<?php echo htmlspecialchars($incidencia->idIncidencia); ?>">
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta incidencia? Esta acción es irreversible.');">Eliminar</button>
                                 </form>

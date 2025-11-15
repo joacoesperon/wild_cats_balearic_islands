@@ -14,7 +14,7 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
+    <?php if ($_SESSION['user_type'] === 'ayuntamiento' || !empty($_SESSION['is_responsable'])): ?>
         <a href="<?php echo url('visitas/create'); ?>" class="btn btn-primary mb-3">Registrar Nueva Visita</a>
     <?php endif; ?>
 

@@ -14,7 +14,9 @@
         </div>
     <?php endif; ?>
 
+    <?php if ($_SESSION['user_type'] === 'ayuntamiento' || !empty($_SESSION['is_responsable'])): ?>
     <a href="<?php echo url('trabajos/create'); ?>" class="btn btn-primary mb-3">Asignar Nueva Tarea</a>
+    <?php endif; ?>
 
     <?php if (empty($trabajos)): ?>
         <div class="alert alert-info" role="alert">

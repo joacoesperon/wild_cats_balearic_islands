@@ -12,7 +12,11 @@ class Interesado extends BaseModel {
                 i.nombreCompleto,
                 i.email,
                 i.telefono,
-                CASE WHEN v.idVoluntario IS NOT NULL THEN TRUE ELSE FALSE END AS es_voluntario
+                CASE
+                    WHEN p.idVoluntario IS NOT NULL THEN 'Voluntario Activo'
+                    WHEN v.idVoluntario IS NOT NULL THEN 'Voluntario Inactivo'
+                    ELSE 'Interesado'
+                END AS estado
             FROM
                 Interesado i
             JOIN
@@ -21,8 +25,13 @@ class Interesado extends BaseModel {
                 BolsaMunicipal bm ON ib.idBolsaMunicipal = bm.idBolsaMunicipal
             LEFT JOIN
                 Voluntario v ON i.idInteresado = v.idInteresado
+            LEFT JOIN
+                -- Usamos una subconsulta para saber si un voluntario está en al menos un grupo
+                (SELECT DISTINCT idVoluntario FROM Pertenencia) p ON v.idVoluntario = p.idVoluntario
             WHERE
                 bm.idAyuntamiento = :idAyuntamiento
+            -- Agrupamos por el interesado para asegurar una fila por persona
+            GROUP BY i.idInteresado
             ORDER BY
                 i.nombreCompleto ASC
         ";
@@ -160,5 +169,49 @@ class Interesado extends BaseModel {
         $stmt->bindParam(':idAyuntamiento', $idAyuntamiento);
         $stmt->execute();
         return $stmt->fetchColumn() !== false;
+    }
+
+    /**
+     * Crea un nuevo interesado sin asociarlo a una bolsa municipal inicialmente.
+     * Utilizado para el formulario de inscripción pública.
+     * @param string $DNI
+     * @param string $nombreCompleto
+     * @param string $email
+     * @param string $telefono
+     * @return int|false El ID del interesado creado o false en caso de error.
+     */
+    public function createInteresadoPublic($DNI, $nombreCompleto, $email, $telefono) {
+        try {
+            $queryInteresado = "INSERT INTO Interesado (DNI, nombreCompleto, email, telefono) VALUES (:DNI, :nombreCompleto, :email, :telefono)";
+            $stmtInteresado = $this->conn->prepare($queryInteresado);
+            $stmtInteresado->bindParam(':DNI', $DNI);
+            $stmtInteresado->bindParam(':nombreCompleto', $nombreCompleto);
+            $stmtInteresado->bindParam(':email', $email);
+            $stmtInteresado->bindParam(':telefono', $telefono);
+            $stmtInteresado->execute();
+            return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Error al crear interesado público: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Asocia un interesado a una bolsa municipal.
+     * @param int $idInteresado
+     * @param int $idBolsaMunicipal
+     * @return bool
+     */
+    public function addInteresadoToBolsa($idInteresado, $idBolsaMunicipal) {
+        try {
+            $queryInteresadoBolsa = "INSERT INTO InteresadoBolsa (idBolsaMunicipal, idInteresado) VALUES (:idBolsaMunicipal, :idInteresado)";
+            $stmtInteresadoBolsa = $this->conn->prepare($queryInteresadoBolsa);
+            $stmtInteresadoBolsa->bindParam(':idBolsaMunicipal', $idBolsaMunicipal);
+            $stmtInteresadoBolsa->bindParam(':idInteresado', $idInteresado);
+            return $stmtInteresadoBolsa->execute();
+        } catch (PDOException $e) {
+            error_log("Error al añadir interesado a bolsa: " . $e->getMessage());
+            return false;
+        }
     }
 }

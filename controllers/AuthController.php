@@ -32,6 +32,7 @@ class AuthController {
                 $_SESSION['user_id'] = $voluntario->idVoluntario;
                 $_SESSION['username'] = $voluntario->usuario;
                 $_SESSION['user_type'] = 'voluntario';
+                $_SESSION['is_responsable'] = $this->voluntarioModel->isResponsable($voluntario->idVoluntario); // Comprobar si es responsable
                 header('Location: ' . url('voluntarios/show?id=' . $voluntario->idVoluntario)); // Redirigir a su perfil
                 exit();
             }
@@ -72,6 +73,18 @@ class AuthController {
         self::checkAuth();
         if ($_SESSION['user_type'] !== 'voluntario') {
             header('Location: ' . url('login')); // O a una página de error de permisos
+            exit();
+        }
+    }
+
+    public static function checkResponsableOrAyuntamientoAuth() {
+        self::checkAuth();
+        $isAyuntamiento = $_SESSION['user_type'] === 'ayuntamiento';
+        $isResponsable = $_SESSION['user_type'] === 'voluntario' && !empty($_SESSION['is_responsable']);
+
+        if (!$isAyuntamiento && !$isResponsable) {
+            $_SESSION['error_message'] = 'No tienes permisos para acceder a esta página.';
+            header('Location: ' . url('login'));
             exit();
         }
     }

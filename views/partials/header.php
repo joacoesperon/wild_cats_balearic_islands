@@ -47,8 +47,14 @@
                         <li class="nav-item">
                             <a class="nav-link" href="<?php echo url('visitas'); ?>">Visitas</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo url('incidencias'); ?>">Incidencias</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownIncidencias" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Incidencias
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdownIncidencias">
+                                <li><a class="dropdown-item" href="<?php echo url('ocurrencias'); ?>">Incidencias Ocurridas</a></li>
+                                <li><a class="dropdown-item" href="<?php echo url('tipos_incidencia'); ?>">Gestionar Tipos</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="<?php echo url('backups'); ?>">Backups</a>
@@ -57,12 +63,22 @@
                         <li class="nav-item">
                             <a class="nav-link" href="<?php echo url('voluntarios/show?id=' . $_SESSION['user_id']); ?>">Mi Perfil</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo url('visitas'); ?>">Mis Visitas</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo url('incidencias'); ?>">Mis Incidencias</a>
-                        </li>
+                        <?php if (!empty($_SESSION['is_responsable'])): // Menú adicional para responsables ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?php echo url('visitas'); ?>">Visitas</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?php echo url('trabajos'); ?>">Tareas</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownIncidencias" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Incidencias
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownIncidencias">
+                                    <li><a class="dropdown-item" href="<?php echo url('ocurrencias'); ?>">Incidencias Ocurridas</a></li>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </ul>
                 <ul class="navbar-nav">

@@ -49,6 +49,9 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Entrar</button>
         </form>
+        <div class="mt-3 text-center">
+            <a href="<?php echo url('interesados/public_welcome'); ?>" class="btn btn-outline-secondary w-100">Inscribirse como voluntario</a>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>

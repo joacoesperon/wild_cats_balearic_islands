@@ -22,9 +22,9 @@
         </div>
     </div>
 
-    <a href="<?php echo url('incidencias'); ?>" class="btn btn-secondary">Volver al Listado</a>
+    <a href="<?php echo url('ocurrencias'); ?>" class="btn btn-secondary">Volver al Listado</a>
     <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
-        <a href="<?php echo url('incidencias/edit?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-warning">Editar Incidencia</a>
+        <a href="<?php echo url('ocurrencias/edit?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-warning">Editar Incidencia</a>
     <?php endif; ?>
 </div>
 

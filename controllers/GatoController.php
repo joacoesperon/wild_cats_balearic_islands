@@ -6,18 +6,19 @@ class GatoController {
     private $coloniaModel;
 
     public function __construct() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden gestionar gatos
         $this->gatoModel = new Gato();
         $this->coloniaModel = new Colonia();
     }
 
     public function index() {
+        AuthController::checkAyuntamientoAuth();
         $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
         $gatos = $this->gatoModel->getAllWithDetails($ayuntamiento_id);
         require_once __DIR__ . '/../views/gatos/list.php';
     }
 
     public function create() {
+        AuthController::checkAyuntamientoAuth();
         $gato = new stdClass(); // Inicializar objeto vacío para el formulario
         $sexos = $this->gatoModel->getSexos();
         $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
@@ -26,6 +27,7 @@ class GatoController {
     }
 
     public function store() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombre = $_POST['nombre'] ?? null;
             $descripcionAspecto = $_POST['descripcionAspecto'] ?? null;
@@ -96,6 +98,7 @@ class GatoController {
     }
 
     public function show() {
+        AuthController::checkAyuntamientoAuth();
         $id = $_GET['id'] ?? null;
         if ($id) {
             $gato = $this->gatoModel->getByIdWithDetails($id);
@@ -115,6 +118,7 @@ class GatoController {
     }
 
     public function edit() {
+        AuthController::checkAyuntamientoAuth();
         $id = $_GET['id'] ?? null;
         if ($id) {
             $gato = $this->gatoModel->getByIdWithDetails($id);
@@ -136,6 +140,7 @@ class GatoController {
     }
 
     public function update() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGato = $_POST['idGato'] ?? null;
             $nombre = $_POST['nombre'] ?? null;
@@ -230,6 +235,7 @@ class GatoController {
     }
 
     public function delete() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGato = $_POST['idGato'] ?? null;
 
@@ -263,6 +269,23 @@ class GatoController {
             }
         }
         header('Location: ' . url('gatos'));
+        exit();
+    }
+
+    public function ajaxGetByColonia() {
+        AuthController::checkResponsableOrAyuntamientoAuth();
+        
+        $idColonia = $_GET['idColonia'] ?? null;
+        if (!$idColonia) {
+            header("HTTP/1.0 400 Bad Request");
+            echo json_encode(['error' => 'Falta el ID de la colonia.']);
+            exit();
+        }
+
+        $gatos = $this->gatoModel->findByColoniaId($idColonia);
+
+        header('Content-Type: application/json');
+        echo json_encode($gatos);
         exit();
     }
 }

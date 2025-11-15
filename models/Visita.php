@@ -105,6 +105,61 @@ class Visita extends BaseModel {
         }
     }
 
+    public function createVisitaConIncidencias($fechaVisita, $idColonia, $voluntarios = [], $incidencias = []) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Insertar Visita
+            $queryVisita = "INSERT INTO Visita (fechaVisita, idColonia) VALUES (:fechaVisita, :idColonia)";
+            $stmtVisita = $this->conn->prepare($queryVisita);
+            $stmtVisita->bindParam(':fechaVisita', $fechaVisita);
+            $stmtVisita->bindParam(':idColonia', $idColonia);
+            $stmtVisita->execute();
+            $idVisita = $this->conn->lastInsertId();
+
+            // 2. Asociar Voluntarios a la Visita
+            // Si el usuario actual es un voluntario responsable, asegurarse de que se añade a sí mismo como participante
+            if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'voluntario' && !empty($_SESSION['is_responsable'])) {
+                $current_voluntario_id = $_SESSION['user_id'];
+                if (!in_array($current_voluntario_id, $voluntarios)) {
+                    $voluntarios[] = $current_voluntario_id;
+                }
+            }
+
+            if (!empty($voluntarios)) {
+                $queryVV = "INSERT INTO VisitaVoluntario (idVisita, idVoluntario) VALUES (:idVisita, :idVoluntario)";
+                $stmtVV = $this->conn->prepare($queryVV);
+                foreach ($voluntarios as $idVoluntario) {
+                    $stmtVV->bindParam(':idVisita', $idVisita);
+                    $stmtVV->bindParam(':idVoluntario', $idVoluntario);
+                    $stmtVV->execute();
+                }
+            }
+
+            // 3. Registrar Incidencias de la Visita
+            if (!empty($incidencias)) {
+                // Nota: A diferencia del controlador original de incidencias, aquí no creamos el tipo.
+                // Simplemente enlazamos el tipo de incidencia ya existente con la visita.
+                $queryIV = "INSERT INTO IncidenciaVisita (idIncidencia, idVisita, idGato) VALUES (:idIncidencia, :idVisita, :idGato)";
+                $stmtIV = $this->conn->prepare($queryIV);
+                foreach ($incidencias as $incidencia) {
+                    $gatoId = empty($incidencia['gato_id']) ? null : $incidencia['gato_id'];
+                    $stmtIV->bindParam(':idIncidencia', $incidencia['tipo_id']);
+                    $stmtIV->bindParam(':idVisita', $idVisita);
+                    $stmtIV->bindParam(':idGato', $gatoId);
+                    $stmtIV->execute();
+                }
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Error al crear visita con incidencias: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function updateVisita($idVisita, $fechaVisita, $idColonia, $voluntarios = []) {
         try {
             $this->conn->beginTransaction();

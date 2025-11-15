@@ -4,27 +4,44 @@
 class TrabajoController {
     private $trabajoModel;
     private $grupoModel;
+    private $voluntarioModel; // Añadido para la lógica de responsables
 
     public function __construct() {
         $this->trabajoModel = new Trabajo();
         $this->grupoModel = new Grupo();
+        $this->voluntarioModel = new Voluntario(); // Añadido
 
         // Enrutamiento de autenticación basado en la acción
         $action = $_GET['action'] ?? (explode('/', trim($_SERVER['PATH_INFO'] ?? '', '/'))[1] ?? 'index');
 
         if ($action === 'completar') {
             AuthController::checkVoluntarioAuth();
+        } elseif (in_array($action, ['index', 'create', 'store'])) {
+            AuthController::checkResponsableOrAyuntamientoAuth();
         } else {
+            // Para edit, update, delete, solo ayuntamiento por ahora
             AuthController::checkAyuntamientoAuth();
         }
     }
 
     /**
-     * Muestra la lista de tareas para el ayuntamiento.
+     * Muestra la lista de tareas.
      */
     public function index() {
-        $idAyuntamiento = $_SESSION['ayuntamiento_id'];
-        $trabajos = $this->trabajoModel->getAllByAyuntamiento($idAyuntamiento);
+        $idAyuntamiento = $_SESSION['ayuntamiento_id'] ?? null;
+        // Si es voluntario, necesitamos el id de ayuntamiento de uno de sus grupos.
+        if ($_SESSION['user_type'] === 'voluntario') {
+            $grupos = $this->voluntarioModel->getGrupos($_SESSION['user_id']);
+            if (!empty($grupos)) {
+                // Tomamos el ayuntamiento del primer grupo, asumiendo que todos son del mismo.
+                $unGrupo = $this->grupoModel->getByIdWithDetails($grupos[0]->idGrupo);
+                $idAyuntamiento = $unGrupo->idAyuntamiento;
+            } else {
+                $idAyuntamiento = null; // No pertenece a ningún grupo, no verá tareas.
+            }
+        }
+        
+        $trabajos = $idAyuntamiento ? $this->trabajoModel->getAllByAyuntamiento($idAyuntamiento) : [];
         require_once __DIR__ . '/../views/trabajos/list.php';
     }
 
@@ -32,8 +49,14 @@ class TrabajoController {
      * Muestra el formulario para crear una nueva tarea.
      */
     public function create() {
-        $idAyuntamiento = $_SESSION['ayuntamiento_id'];
-        $grupos = $this->grupoModel->getAllByAyuntamiento($idAyuntamiento);
+        if ($_SESSION['user_type'] === 'ayuntamiento') {
+            $idAyuntamiento = $_SESSION['ayuntamiento_id'];
+            $grupos = $this->grupoModel->getAllByAyuntamiento($idAyuntamiento);
+        } else { // Es un voluntario responsable
+            $idVoluntario = $_SESSION['user_id'];
+            $grupos = $this->voluntarioModel->getGruposResponsable($idVoluntario);
+        }
+        
         $trabajo = new stdClass(); // Objeto vacío para el formulario
         require_once __DIR__ . '/../views/trabajos/form.php';
     }
@@ -45,9 +68,38 @@ class TrabajoController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $descripcion = $_POST['descripcionTrabajo'] ?? null;
             $idGrupo = $_POST['idGrupo'] ?? null;
-            $idAyuntamiento = $_SESSION['ayuntamiento_id'];
+            $idAyuntamiento = null;
 
-            if ($descripcion && $idGrupo) {
+            if ($_SESSION['user_type'] === 'ayuntamiento') {
+                $idAyuntamiento = $_SESSION['ayuntamiento_id'];
+                // Validar que el grupo pertenece al ayuntamiento
+                $grupo = $this->grupoModel->getByIdWithDetails($idGrupo);
+                if (!$grupo || $grupo->idAyuntamiento != $idAyuntamiento) {
+                    $_SESSION['error_message'] = 'El grupo seleccionado no es válido.';
+                    header('Location: ' . url('trabajos/create'));
+                    exit();
+                }
+            } else { // Es un voluntario responsable
+                $idVoluntario = $_SESSION['user_id'];
+                $gruposResponsable = $this->voluntarioModel->getGruposResponsable($idVoluntario);
+                $esGrupoValido = false;
+                foreach ($gruposResponsable as $grupo) {
+                    if ($grupo->idGrupo == $idGrupo) {
+                        $esGrupoValido = true;
+                        // Necesitamos el id del ayuntamiento para guardarlo en la tarea
+                        $grupoDetalles = $this->grupoModel->getByIdWithDetails($idGrupo);
+                        $idAyuntamiento = $grupoDetalles->idAyuntamiento;
+                        break;
+                    }
+                }
+                if (!$esGrupoValido) {
+                    $_SESSION['error_message'] = 'No tienes permisos para asignar tareas a este grupo.';
+                    header('Location: ' . url('trabajos/create'));
+                    exit();
+                }
+            }
+
+            if ($descripcion && $idGrupo && $idAyuntamiento) {
                 if ($this->trabajoModel->create($descripcion, $idGrupo, $idAyuntamiento)) {
                     $_SESSION['success_message'] = 'Tarea asignada correctamente.';
                     header('Location: ' . url('trabajos'));

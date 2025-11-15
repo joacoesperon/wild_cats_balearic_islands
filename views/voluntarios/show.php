@@ -93,7 +93,7 @@
                 </table>
             <?php endif; ?>
 
-            <h5 class="mt-4">Visitas Programadas</h5>
+            <h5 class="mt-4">Visitas</h5>
             <?php if (empty($visitas)): ?>
                 <p>No tienes visitas programadas.</p>
             <?php else: ?>

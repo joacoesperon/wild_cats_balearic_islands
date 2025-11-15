@@ -110,4 +110,54 @@ class Voluntario extends BaseModel {
         ";
         return $this->executeQuery($query, [':idVoluntario' => $idVoluntario]);
     }
+
+    /**
+     * Comprueba si un voluntario es responsable de al menos un grupo.
+     * @param int $idVoluntario
+     * @return bool
+     */
+    public function isResponsable($idVoluntario) {
+        $query = "SELECT 1 FROM Pertenencia WHERE idVoluntario = :idVoluntario AND es_responsable = 1 LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':idVoluntario', $idVoluntario);
+        $stmt->execute();
+        return $stmt->fetchColumn() !== false;
+    }
+
+    /**
+     * Obtiene los grupos de los que un voluntario es responsable.
+     * @param int $idVoluntario
+     * @return array
+     */
+    public function getGruposResponsable($idVoluntario) {
+        $query = "
+            SELECT g.idGrupo, g.nombreGrupo
+            FROM Grupo g
+            JOIN Pertenencia p ON g.idGrupo = p.idGrupo
+            WHERE p.idVoluntario = :idVoluntario AND p.es_responsable = 1
+            ORDER BY g.nombreGrupo ASC
+        ";
+        return $this->executeQuery($query, [':idVoluntario' => $idVoluntario]);
+    }
+
+    /**
+     * Obtiene los voluntarios que pertenecen a los grupos gestionados por un responsable.
+     * @param int $idResponsable El ID del voluntario que es responsable.
+     * @return array
+     */
+    public function getVoluntariosManagedByResponsable($idResponsable) {
+        $query = "
+            SELECT DISTINCT v.idVoluntario, i.nombreCompleto, v.usuario
+            FROM Voluntario v
+            JOIN Interesado i ON v.idInteresado = i.idInteresado
+            JOIN Pertenencia p_voluntario ON v.idVoluntario = p_voluntario.idVoluntario
+            WHERE p_voluntario.idGrupo IN (
+                SELECT idGrupo
+                FROM Pertenencia
+                WHERE idVoluntario = :idResponsable AND es_responsable = 1
+            )
+            ORDER BY i.nombreCompleto ASC
+        ";
+        return $this->executeQuery($query, [':idResponsable' => $idResponsable]);
+    }
 }

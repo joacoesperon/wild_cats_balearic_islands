@@ -431,6 +431,7 @@ DELIMITER ;
 -- Habilitar el planificador de eventos si no está habilitado
 SET GLOBAL event_scheduler = ON;
 
+DELIMITER //
 CREATE EVENT IF NOT EXISTS daily_backup_event
 ON SCHEDULE EVERY 1 DAY
 STARTS (CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 2 HOUR) -- Empieza mañana a las 02:00 AM
@@ -438,28 +439,13 @@ DO
 BEGIN
     CALL sp_backup_gatos_mallorca();
 END //
-
 DELIMITER ;
 
 --
--- TRIGGER para gestionar el cambio de colonia de un gato (ALBIRAMENT)
+-- El trigger para el cambio de estancia (trg_before_insert_estancia) ha sido eliminado.
+-- La lógica para gestionar el historial de estancias se ha movido a la aplicación PHP (models/Gato.php)
+-- para evitar errores de tabla mutante (Error 1442) en MySQL.
 --
-DELIMITER //
-
-CREATE TRIGGER trg_after_insert_estancia
-AFTER INSERT ON Estancia
-FOR EACH ROW
-BEGIN
-    -- Actualiza la estancia activa anterior para el mismo gato.
-    -- Establece su fechaFin a la fechaInicio de la estancia recién insertada.
-    UPDATE Estancia
-    SET fechaFin = NEW.fechaInicio
-    WHERE idGato = NEW.idGato
-      AND idEstancia != NEW.idEstancia -- Excluye la estancia que acaba de ser insertada
-      AND fechaFin IS NULL; -- Solo actualiza la que estaba activa previamente
-END //
-
-DELIMITER ;
 
 -- Reactivar la verificación de claves foráneas
 SET FOREIGN_KEY_CHECKS = 1;

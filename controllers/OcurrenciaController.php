@@ -1,7 +1,7 @@
 <?php
-// controllers/IncidenciaController.php
+// controllers/OcurrenciaController.php
 
-class IncidenciaController {
+class OcurrenciaController {
     private $incidenciaModel;
     private $visitaModel;
     private $gatoModel;
@@ -17,34 +17,7 @@ class IncidenciaController {
         $user_type = $_SESSION['user_type'];
         $user_id = $_SESSION['user_id'];
         $incidencias = $this->incidenciaModel->getAllWithDetails($user_type, $user_id);
-        require_once __DIR__ . '/../views/incidencias/list.php';
-    }
-
-    public function create() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden crear incidencias
-        $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
-        $visitas = $this->visitaModel->getAllWithDetails('ayuntamiento', $ayuntamiento_id);
-        $gatos = $this->gatoModel->getAllWithDetails($ayuntamiento_id);
-        require_once __DIR__ . '/../views/incidencias/form.php';
-    }
-
-    public function store() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden crear incidencias
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $textoDescriptivo = $_POST['textoDescriptivo'] ?? null;
-            $idVisita = $_POST['idVisita'] ?? null;
-            $idGato = $_POST['idGato'] ?? null;
-
-            if ($this->incidenciaModel->createIncidencia($textoDescriptivo, $idVisita, $idGato)) {
-                $_SESSION['success_message'] = 'Incidencia registrada correctamente.';
-                header('Location: ' . url('incidencias'));
-                exit();
-            } else {
-                $_SESSION['error_message'] = 'Error al registrar la incidencia.';
-            }
-        }
-        header('Location: ' . url('incidencias/create'));
-        exit();
+        require_once __DIR__ . '/../views/ocurrencias/list.php';
     }
 
     public function show() {
@@ -55,19 +28,19 @@ class IncidenciaController {
                 // Verificar permisos
                 if ($_SESSION['user_type'] === 'ayuntamiento' && $incidencia->idAyuntamiento != $_SESSION['ayuntamiento_id']) {
                     $_SESSION['error_message'] = 'No tienes permisos para ver esta incidencia.';
-                    header('Location: ' . url('incidencias'));
+                    header('Location: ' . url('ocurrencias'));
                     exit();
                 }
                 // Para voluntarios, se debería verificar si el voluntario está asociado a la visita de la incidencia
                 // Por simplicidad, si es voluntario y la incidencia existe, se muestra.
                 // Una implementación más robusta requeriría una consulta para verificar VisitaVoluntario.
 
-                require_once __DIR__ . '/../views/incidencias/show.php';
+                require_once __DIR__ . '/../views/ocurrencias/show.php';
                 return;
             }
         }
         $_SESSION['error_message'] = 'Incidencia no encontrada.';
-        header('Location: ' . url('incidencias'));
+        header('Location: ' . url('ocurrencias'));
         exit();
     }
 
@@ -80,12 +53,12 @@ class IncidenciaController {
                 $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
                 $visitas = $this->visitaModel->getAllWithDetails('ayuntamiento', $ayuntamiento_id);
                 $gatos = $this->gatoModel->getAllWithDetails($ayuntamiento_id);
-                require_once __DIR__ . '/../views/incidencias/form.php';
+                require_once __DIR__ . '/../views/ocurrencias/form.php';
                 return;
             }
         }
         $_SESSION['error_message'] = 'Incidencia no encontrada o no tienes permisos para editarla.';
-        header('Location: ' . url('incidencias'));
+        header('Location: ' . url('ocurrencias'));
         exit();
     }
 
@@ -101,19 +74,19 @@ class IncidenciaController {
             $incidenciaExistente = $this->incidenciaModel->getByIdWithDetails($idIncidencia);
             if (!$incidenciaExistente || $incidenciaExistente->idAyuntamiento != $_SESSION['ayuntamiento_id']) {
                 $_SESSION['error_message'] = 'No tienes permisos para actualizar esta incidencia.';
-                header('Location: ' . url('incidencias'));
+                header('Location: ' . url('ocurrencias'));
                 exit();
             }
 
             if ($this->incidenciaModel->updateIncidencia($idIncidencia, $textoDescriptivo, $idVisita, $idGato)) {
                 $_SESSION['success_message'] = 'Incidencia actualizada correctamente.';
-                header('Location: ' . url('incidencias'));
+                header('Location: ' . url('ocurrencias'));
                 exit();
             } else {
                 $_SESSION['error_message'] = 'Error al actualizar la incidencia.';
             }
         }
-        header('Location: ' . url('incidencias'));
+        header('Location: ' . url('ocurrencias'));
         exit();
     }
 
@@ -126,19 +99,19 @@ class IncidenciaController {
             $incidenciaExistente = $this->incidenciaModel->getByIdWithDetails($idIncidencia);
             if (!$incidenciaExistente || $incidenciaExistente->idAyuntamiento != $_SESSION['ayuntamiento_id']) {
                 $_SESSION['error_message'] = 'No tienes permisos para eliminar esta incidencia.';
-                header('Location: ' . url('incidencias'));
+                header('Location: ' . url('ocurrencias'));
                 exit();
             }
 
             if ($this->incidenciaModel->deleteIncidencia($idIncidencia)) {
                 $_SESSION['success_message'] = 'Incidencia eliminada correctamente.';
-                header('Location: ' . url('incidencias'));
+                header('Location: ' . url('ocurrencias'));
                 exit();
             } else {
                 $_SESSION['error_message'] = 'Error al eliminar la incidencia.';
             }
         }
-        header('Location: ' . url('incidencias'));
+        header('Location: ' . url('ocurrencias'));
         exit();
     }
 }
