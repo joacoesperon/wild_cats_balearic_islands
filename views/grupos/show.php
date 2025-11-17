@@ -28,7 +28,9 @@
                             <th>Voluntario</th>
                             <th>Usuario</th>
                             <th>Rol</th>
-                            <th>Acciones</th>
+                            <?php if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'ayuntamiento'): ?>
+                                <th>Acciones</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,24 +45,26 @@
                                         <span class="badge bg-secondary">Voluntario</span>
                                     <?php endif; ?>
                                 </td>
-                                <td>
-                                    <div class="d-flex">
-                                        <?php if (!$miembro->es_responsable): ?>
-                                            <form action="<?php echo url('grupos/removemiembro'); ?>" method="POST" class="me-2">
-                                                <input type="hidden" name="idGrupo" value="<?php echo htmlspecialchars($grupo->idGrupo); ?>">
-                                                <input type="hidden" name="idVoluntario" value="<?php echo htmlspecialchars($miembro->idVoluntario); ?>">
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar a este voluntario del grupo?');">Quitar</button>
-                                            </form>
-                                            <form action="<?php echo url('grupos/setresponsable'); ?>" method="POST">
-                                                <input type="hidden" name="idGrupo" value="<?php echo htmlspecialchars($grupo->idGrupo); ?>">
-                                                <input type="hidden" name="idVoluntario" value="<?php echo htmlspecialchars($miembro->idVoluntario); ?>">
-                                                <button type="submit" class="btn btn-sm btn-info">Hacer Responsable</button>
-                                            </form>
-                                        <?php else: ?>
-                                            <small class="text-muted">No se puede quitar al responsable.</small>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
+                                <?php if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'ayuntamiento'): ?>
+                                    <td>
+                                        <div class="d-flex">
+                                            <?php if (!$miembro->es_responsable): ?>
+                                                <form action="<?php echo url('grupos/removemiembro'); ?>" method="POST" class="me-2">
+                                                    <input type="hidden" name="idGrupo" value="<?php echo htmlspecialchars($grupo->idGrupo); ?>">
+                                                    <input type="hidden" name="idVoluntario" value="<?php echo htmlspecialchars($miembro->idVoluntario); ?>">
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar a este voluntario del grupo?');">Quitar</button>
+                                                </form>
+                                                <form action="<?php echo url('grupos/setresponsable'); ?>" method="POST">
+                                                    <input type="hidden" name="idGrupo" value="<?php echo htmlspecialchars($grupo->idGrupo); ?>">
+                                                    <input type="hidden" name="idVoluntario" value="<?php echo htmlspecialchars($miembro->idVoluntario); ?>">
+                                                    <button type="submit" class="btn btn-sm btn-info">Hacer Responsable</button>
+                                                </form>
+                                            <?php else: ?>
+                                                <small class="text-muted">No se puede quitar al responsable.</small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -69,37 +73,41 @@
         </div>
     </div>
 
-    <div class="card mb-3">
-        <div class="card-header">
-            Añadir Voluntario al Grupo
+    <?php if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'ayuntamiento'): ?>
+        <div class="card mb-3">
+            <div class="card-header">
+                Añadir Voluntario al Grupo
+            </div>
+            <div class="card-body">
+                <?php if (!empty($voluntariosDisponibles)): ?>
+                    <form action="<?php echo url('grupos/addmiembro'); ?>" method="POST" class="row g-3 align-items-end">
+                        <input type="hidden" name="idGrupo" value="<?php echo htmlspecialchars($grupo->idGrupo); ?>">
+                        <div class="col-md-6">
+                            <label for="idVoluntario" class="form-label">Voluntarios Disponibles</label>
+                            <select name="idVoluntario" id="idVoluntario" class="form-select" required>
+                                <option value="">-- Selecciona un voluntario --</option>
+                                <?php foreach ($voluntariosDisponibles as $voluntario): ?>
+                                    <option value="<?php echo htmlspecialchars($voluntario->idVoluntario); ?>">
+                                        <?php echo htmlspecialchars($voluntario->nombreCompleto); ?> (<?php echo htmlspecialchars($voluntario->usuario); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary">Añadir Miembro</button>
+                        </div>
+                    </form>
+                <?php else: ?>
+                    <p>No hay más voluntarios disponibles en este ayuntamiento para añadir al grupo.</p>
+                <?php endif; ?>
+            </div>
         </div>
-        <div class="card-body">
-            <?php if (!empty($voluntariosDisponibles)): ?>
-                <form action="<?php echo url('grupos/addmiembro'); ?>" method="POST" class="row g-3 align-items-end">
-                    <input type="hidden" name="idGrupo" value="<?php echo htmlspecialchars($grupo->idGrupo); ?>">
-                    <div class="col-md-6">
-                        <label for="idVoluntario" class="form-label">Voluntarios Disponibles</label>
-                        <select name="idVoluntario" id="idVoluntario" class="form-select" required>
-                            <option value="">-- Selecciona un voluntario --</option>
-                            <?php foreach ($voluntariosDisponibles as $voluntario): ?>
-                                <option value="<?php echo htmlspecialchars($voluntario->idVoluntario); ?>">
-                                    <?php echo htmlspecialchars($voluntario->nombreCompleto); ?> (<?php echo htmlspecialchars($voluntario->usuario); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <button type="submit" class="btn btn-primary">Añadir Miembro</button>
-                    </div>
-                </form>
-            <?php else: ?>
-                <p>No hay más voluntarios disponibles en este ayuntamiento para añadir al grupo.</p>
-            <?php endif; ?>
-        </div>
-    </div>
 
-    <a href="<?php echo url('grupos'); ?>" class="btn btn-secondary">Volver al Listado</a>
-    <a href="<?php echo url('grupos/edit?id=' . htmlspecialchars($grupo->idGrupo)); ?>" class="btn btn-warning">Editar Grupo</a>
+        <a href="<?php echo url('grupos'); ?>" class="btn btn-secondary">Volver al Listado</a>
+        <a href="<?php echo url('grupos/edit?id=' . htmlspecialchars($grupo->idGrupo)); ?>" class="btn btn-warning">Editar Grupo</a>
+    <?php else: ?>
+        <a href="<?php echo url('voluntarios/show?id=' . $_SESSION['user_id']); ?>" class="btn btn-secondary">Volver a Mi Perfil</a>
+    <?php endif; ?>
 </div>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

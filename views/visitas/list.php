@@ -42,8 +42,17 @@
                         <td><?php echo htmlspecialchars($visita->ayuntamiento_nombre); ?></td>
                         <td>
                             <a href="<?php echo url('visitas/show?id=' . htmlspecialchars($visita->idVisita)); ?>" class="btn btn-info btn-sm">Ver</a>
-                            <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
+                            
+                            <?php 
+                            $esResponsable = $_SESSION['user_type'] === 'voluntario' && !empty($_SESSION['is_responsable']);
+                            $esEditablePorResponsable = $esResponsable && !empty($visita->is_editable);
+                            ?>
+
+                            <?php if ($_SESSION['user_type'] === 'ayuntamiento' || $esEditablePorResponsable): ?>
                                 <a href="<?php echo url('visitas/edit?id=' . htmlspecialchars($visita->idVisita)); ?>" class="btn btn-warning btn-sm">Editar</a>
+                            <?php endif; ?>
+
+                            <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
                                 <form action="<?php echo url('visitas/delete'); ?>" method="POST" style="display:inline-block;">
                                     <input type="hidden" name="idVisita" value="<?php echo htmlspecialchars($visita->idVisita); ?>">
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta visita? Esta acción es irreversible.');">Eliminar</button>

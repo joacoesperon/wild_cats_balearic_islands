@@ -16,10 +16,10 @@ class TrabajoController {
 
         if ($action === 'completar') {
             AuthController::checkVoluntarioAuth();
-        } elseif (in_array($action, ['index', 'create', 'store'])) {
+        } elseif (in_array($action, ['index'])) {
             AuthController::checkResponsableOrAyuntamientoAuth();
         } else {
-            // Para edit, update, delete, solo ayuntamiento por ahora
+            // Para create, store, edit, update, delete, solo ayuntamiento
             AuthController::checkAyuntamientoAuth();
         }
     }
@@ -207,6 +207,7 @@ class TrabajoController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idTrabajo = $_POST['idTrabajo'] ?? null;
             $idVoluntario = $_SESSION['user_id'] ?? null;
+            $return_to = $_POST['return_to'] ?? 'profile';
 
             if ($idTrabajo && $idVoluntario) {
                 if ($this->trabajoModel->verificarPertenenciaVoluntario($idTrabajo, $idVoluntario)) {
@@ -222,7 +223,12 @@ class TrabajoController {
                 $_SESSION['error_message'] = 'Datos insuficientes para completar la tarea.';
             }
         }
-        header('Location: ' . url('voluntarios/show?id=' . $_SESSION['user_id']));
+
+        if (isset($return_to) && $return_to === 'list') {
+            header('Location: ' . url('trabajos'));
+        } else {
+            header('Location: ' . url('voluntarios/show?id=' . $_SESSION['user_id']));
+        }
         exit();
     }
 }

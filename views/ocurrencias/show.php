@@ -10,10 +10,10 @@
         <div class="card-body">
             <p><strong>ID:</strong> <?php echo htmlspecialchars($incidencia->idIncidencia); ?></p>
             <p><strong>Descripción:</strong> <?php echo htmlspecialchars($incidencia->textoDescriptivo); ?></p>
-            <p><strong>Visita Asociada:</strong> <a href="<?php echo url('visitas/show?id=' . htmlspecialchars($incidencia->idVisita)); ?>"><?php echo htmlspecialchars($incidencia->fechaVisita); ?> (Colonia: <?php echo htmlspecialchars($incidencia->colonia_nombre); ?>)</a></p>
+            <p><strong>Visita Asociada:</strong> <?php echo htmlspecialchars($incidencia->fechaVisita); ?> (Colonia: <?php echo htmlspecialchars($incidencia->colonia_nombre); ?>)</p>
             <p><strong>Gato Afectado:</strong>
                 <?php if ($incidencia->idGato): ?>
-                    <a href="<?php echo url('gatos/show?id=' . htmlspecialchars($incidencia->idGato)); ?>"><?php echo htmlspecialchars($incidencia->gato_nombre); ?></a>
+                    <?php echo htmlspecialchars($incidencia->gato_nombre); ?>
                 <?php else: ?>
                     N/A
                 <?php endif; ?>
@@ -22,9 +22,21 @@
         </div>
     </div>
 
-    <a href="<?php echo url('ocurrencias'); ?>" class="btn btn-secondary">Volver al Listado</a>
+    <?php
+    $from_visit_id = $_GET['from_visit'] ?? null;
+    if ($from_visit_id) {
+        $back_url = url('visitas/show?id=' . htmlspecialchars($from_visit_id));
+        if (isset($_GET['from_profile'])) {
+            $back_url .= '&from_profile=' . htmlspecialchars($_GET['from_profile']);
+        }
+        echo '<a href="' . $back_url . '" class="btn btn-secondary">Volver a la Visita</a>';
+    } else {
+        echo '<a href="' . url('ocurrencias') . '" class="btn btn-secondary">Volver al Listado</a>';
+    }
+    ?>
+
     <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
-        <a href="<?php echo url('ocurrencias/edit?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-warning">Editar Incidencia</a>
+        <a href="<?php echo url('ocurrencias/edit?id=' . htmlspecialchars($incidencia->idIncidenciaVisita)); ?>" class="btn btn-warning">Editar Incidencia</a>
     <?php endif; ?>
 </div>
 

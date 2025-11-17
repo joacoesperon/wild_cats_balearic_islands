@@ -4,9 +4,10 @@
 class Incidencia extends BaseModel {
     protected $table_name = 'Incidencia';
 
-    public function getAllWithDetails($user_type, $user_id) {
+    public function getOcurrenciasWithDetails($user_type, $user_id) {
         $query = "
             SELECT
+                iv.idIncidenciaVisita,
                 i.idIncidencia,
                 i.textoDescriptivo,
                 v.fechaVisita,
@@ -32,7 +33,6 @@ class Incidencia extends BaseModel {
             $query .= " WHERE c.idAyuntamiento = :user_id";
             $params[':user_id'] = $user_id;
         } elseif ($user_type === 'voluntario') {
-            // Para voluntarios, solo mostrar incidencias de visitas en las que participó
             $query .= " JOIN VisitaVoluntario vv ON v.idVisita = vv.idVisita WHERE vv.idVoluntario = :user_id";
             $params[':user_id'] = $user_id;
         }
@@ -40,9 +40,10 @@ class Incidencia extends BaseModel {
         return $this->executeQuery($query, $params);
     }
 
-    public function getByIdWithDetails($id) {
+    public function getOcurrenciaById($id) {
         $query = "
             SELECT
+                iv.idIncidenciaVisita,
                 i.idIncidencia,
                 i.textoDescriptivo,
                 iv.idVisita,
@@ -66,7 +67,7 @@ class Incidencia extends BaseModel {
             LEFT JOIN
                 Gato g ON iv.idGato = g.idGato
             WHERE
-                i.idIncidencia = :id
+                iv.idIncidenciaVisita = :id
             LIMIT 0,1
         ";
         return $this->executeQuery($query, [':id' => $id], false);
@@ -156,6 +157,7 @@ class Incidencia extends BaseModel {
     public function findByVisitaId($idVisita) {
         $query = "
             SELECT
+                iv.idIncidenciaVisita,
                 i.idIncidencia,
                 i.textoDescriptivo,
                 iv.idGato,
@@ -177,7 +179,7 @@ class Incidencia extends BaseModel {
     // --- Métodos para CRUD de Tipos de Incidencia ---
 
     public function getTipos() {
-        $query = "SELECT * FROM " . $this->table_name . " ORDER BY textoDescriptivo ASC";
+        $query = "SELECT * FROM " . $this->table_name . " ORDER BY idIncidencia ASC";
         return $this->executeQuery($query);
     }
 

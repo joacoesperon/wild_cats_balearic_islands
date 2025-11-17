@@ -1,0 +1,16 @@
+--- START DEBUG 2025-11-17 16:18:34 ---
+Fetching visitas_participadas for user_id: 1
+Result of getVisitasParticipadas:
+Array
+(
+    [0] => stdClass Object
+        (
+            [idVisita] => 28
+            [fechaVisita] => 2025-11-16
+            [colonia_nombre] => Colonia A - Palma Centro
+            [ayuntamiento_nombre] => Palma
+        )
+
+)
+
+Fetching visitas_gestionadas for user_id: 1

@@ -37,11 +37,14 @@
             <?php else: ?>
                 <ul class="list-group">
                     <?php foreach ($grupos as $grupo): ?>
-                        <li class="list-group-item">
-                            <?php echo htmlspecialchars($grupo->nombreGrupo); ?>
-                            <?php if ($grupo->es_responsable): ?>
-                                <span class="badge bg-success">Responsable</span>
-                            <?php endif; ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <?php echo htmlspecialchars($grupo->nombreGrupo); ?>
+                                <?php if ($grupo->es_responsable): ?>
+                                    <span class="badge bg-success">Responsable</span>
+                                <?php endif; ?>
+                            </div>
+                            <a href="<?php echo url('grupos/show?id=' . htmlspecialchars($grupo->idGrupo)); ?>" class="btn btn-info btn-sm">Ver</a>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -100,8 +103,11 @@
                 <ul class="list-group">
                     <?php foreach ($visitas as $visita): ?>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Visita a la colonia "<?php echo htmlspecialchars($visita->nombreColonia); ?>"
-                            <span class="badge bg-info rounded-pill"><?php echo date('d/m/Y', strtotime($visita->fechaVisita)); ?></span>
+                            <div>
+                                Visita a la colonia "<?php echo htmlspecialchars($visita->nombreColonia); ?>"
+                                <span class="badge bg-info rounded-pill"><?php echo date('d/m/Y', strtotime($visita->fechaVisita)); ?></span>
+                            </div>
+                            <a href="<?php echo url('visitas/show?id=' . htmlspecialchars($visita->idVisita) . '&from_profile=' . htmlspecialchars($_SESSION['user_id'])); ?>" class="btn btn-info btn-sm">Ver</a>
                         </li>
                     <?php endforeach; ?>
                 </ul>

@@ -35,17 +35,17 @@
             <tbody>
                 <?php foreach ($incidencias as $incidencia): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($incidencia->idIncidencia); ?></td>
+                        <td><?php echo htmlspecialchars($incidencia->idIncidenciaVisita); ?></td>
                         <td><?php echo htmlspecialchars($incidencia->textoDescriptivo); ?></td>
                         <td><?php echo htmlspecialchars($incidencia->fechaVisita); ?></td>
                         <td><?php echo htmlspecialchars($incidencia->colonia_nombre); ?></td>
                         <td><?php echo htmlspecialchars($incidencia->gato_nombre ?? 'N/A'); ?></td>
                         <td>
-                            <a href="<?php echo url('ocurrencias/show?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-info btn-sm">Ver</a>
+                            <a href="<?php echo url('ocurrencias/show?id=' . htmlspecialchars($incidencia->idIncidenciaVisita)); ?>" class="btn btn-info btn-sm">Ver</a>
                             <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
-                                <a href="<?php echo url('ocurrencias/edit?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-warning btn-sm">Editar</a>
+                                <a href="<?php echo url('ocurrencias/edit?id=' . htmlspecialchars($incidencia->idIncidenciaVisita)); ?>" class="btn btn-warning btn-sm">Editar</a>
                                 <form action="<?php echo url('ocurrencias/delete'); ?>" method="POST" style="display:inline-block;">
-                                    <input type="hidden" name="idIncidencia" value="<?php echo htmlspecialchars($incidencia->idIncidencia); ?>">
+                                    <input type="hidden" name="idIncidencia" value="<?php echo htmlspecialchars($incidencia->idIncidenciaVisita); ?>">
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta incidencia? Esta acción es irreversible.');">Eliminar</button>
                                 </form>
                             <?php endif; ?>

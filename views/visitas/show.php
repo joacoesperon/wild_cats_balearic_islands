@@ -9,7 +9,7 @@
         </div>
         <div class="card-body">
             <p><strong>Fecha de Visita:</strong> <?php echo htmlspecialchars($visita->fechaVisita); ?></p>
-            <p><strong>Colonia:</strong> <a href="<?php echo url('colonias/show?id=' . htmlspecialchars($visita->idColonia)); ?>"><?php echo htmlspecialchars($visita->colonia_nombre); ?></a></p>
+            <p><strong>Colonia:</strong> <?php echo htmlspecialchars($visita->colonia_nombre); ?></p>
             <p><strong>Ayuntamiento:</strong> <?php echo htmlspecialchars($visita->ayuntamiento_nombre); ?></p>
         </div>
     </div>
@@ -53,15 +53,19 @@
                                 <td><?php echo htmlspecialchars($incidencia->textoDescriptivo); ?></td>
                                 <td>
                                     <?php if ($incidencia->idGato): ?>
-                                        <a href="<?php echo url('gatos/show?id=' . htmlspecialchars($incidencia->idGato)); ?>">
-                                            <?php echo htmlspecialchars($incidencia->gato_nombre ?: 'Gato no encontrado'); ?>
-                                        </a>
+                                        <?php echo htmlspecialchars($incidencia->gato_nombre ?: 'Gato no encontrado'); ?>
                                     <?php else: ?>
                                         <span class="text-muted">N/A</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <a href="<?php echo url('incidencias/show?id=' . htmlspecialchars($incidencia->idIncidencia)); ?>" class="btn btn-info btn-sm">Ver</a>
+                                    <?php
+                                    $ocurrencia_url = url('ocurrencias/show?id=' . htmlspecialchars($incidencia->idIncidenciaVisita) . '&from_visit=' . htmlspecialchars($visita->idVisita));
+                                    if (isset($_GET['from_profile'])) {
+                                        $ocurrencia_url .= '&from_profile=' . htmlspecialchars($_GET['from_profile']);
+                                    }
+                                    ?>
+                                    <a href="<?php echo $ocurrencia_url; ?>" class="btn btn-info btn-sm">Ver</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -71,7 +75,15 @@
         </div>
     </div>
 
-    <a href="<?php echo url('visitas'); ?>" class="btn btn-secondary">Volver al Listado</a>
+    <?php
+    $from_profile_id = $_GET['from_profile'] ?? null;
+    if ($from_profile_id):
+    ?>
+        <a href="<?php echo url('voluntarios/show?id=' . htmlspecialchars($from_profile_id)); ?>" class="btn btn-secondary">Volver a Mi Perfil</a>
+    <?php else: ?>
+        <a href="<?php echo url('visitas'); ?>" class="btn btn-secondary">Volver al Listado</a>
+    <?php endif; ?>
+
     <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
         <a href="<?php echo url('visitas/edit?id=' . htmlspecialchars($visita->idVisita)); ?>" class="btn btn-warning">Editar Visita</a>
     <?php endif; ?>

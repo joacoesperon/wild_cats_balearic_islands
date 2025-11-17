@@ -16,14 +16,14 @@ class OcurrenciaController {
     public function index() {
         $user_type = $_SESSION['user_type'];
         $user_id = $_SESSION['user_id'];
-        $incidencias = $this->incidenciaModel->getAllWithDetails($user_type, $user_id);
+        $incidencias = $this->incidenciaModel->getOcurrenciasWithDetails($user_type, $user_id);
         require_once __DIR__ . '/../views/ocurrencias/list.php';
     }
 
     public function show() {
         $id = $_GET['id'] ?? null;
         if ($id) {
-            $incidencia = $this->incidenciaModel->getByIdWithDetails($id);
+            $incidencia = $this->incidenciaModel->getOcurrenciaById($id);
             if ($incidencia) {
                 // Verificar permisos
                 if ($_SESSION['user_type'] === 'ayuntamiento' && $incidencia->idAyuntamiento != $_SESSION['ayuntamiento_id']) {

@@ -111,4 +111,19 @@ class Grupo extends BaseModel {
             return $stmtSet->execute();
         }
     }
+
+    /**
+     * Verifica si un voluntario pertenece a un grupo específico.
+     * @param int $idGrupo
+     * @param int $idVoluntario
+     * @return bool
+     */
+    public function isMember($idGrupo, $idVoluntario) {
+        $query = "SELECT 1 FROM Pertenencia WHERE idGrupo = :idGrupo AND idVoluntario = :idVoluntario LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':idGrupo', $idGrupo);
+        $stmt->bindParam(':idVoluntario', $idVoluntario);
+        $stmt->execute();
+        return $stmt->fetchColumn() !== false;
+    }
 }

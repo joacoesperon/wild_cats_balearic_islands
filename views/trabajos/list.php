@@ -14,7 +14,7 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($_SESSION['user_type'] === 'ayuntamiento' || !empty($_SESSION['is_responsable'])): ?>
+    <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
     <a href="<?php echo url('trabajos/create'); ?>" class="btn btn-primary mb-3">Asignar Nueva Tarea</a>
     <?php endif; ?>
 
@@ -45,11 +45,23 @@
                             <?php endif; ?>
                         </td>
                         <td>
-                            <a href="<?php echo url('trabajos/edit?id=' . htmlspecialchars($trabajo->idTrabajo)); ?>" class="btn btn-warning btn-sm">Editar</a>
-                            <form action="<?php echo url('trabajos/delete'); ?>" method="POST" style="display:inline-block;">
-                                <input type="hidden" name="idTrabajo" value="<?php echo htmlspecialchars($trabajo->idTrabajo); ?>">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta tarea?');">Eliminar</button>
-                            </form>
+                            <?php if ($_SESSION['user_type'] === 'ayuntamiento'): ?>
+                                <a href="<?php echo url('trabajos/edit?id=' . htmlspecialchars($trabajo->idTrabajo)); ?>" class="btn btn-warning btn-sm">Editar</a>
+                                <form action="<?php echo url('trabajos/delete'); ?>" method="POST" style="display:inline-block;">
+                                    <input type="hidden" name="idTrabajo" value="<?php echo htmlspecialchars($trabajo->idTrabajo); ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que quieres eliminar esta tarea?');">Eliminar</button>
+                                </form>
+                            <?php else: ?>
+                                <?php if (!$trabajo->completado): ?>
+                                    <form action="<?php echo url('trabajos/completar'); ?>" method="POST" style="display:inline;">
+                                        <input type="hidden" name="idTrabajo" value="<?php echo $trabajo->idTrabajo; ?>">
+                                        <input type="hidden" name="return_to" value="list">
+                                        <button type="submit" class="btn btn-primary btn-sm">Marcar como Completada</button>
+                                    </form>
+                                <?php else: ?>
+                                    <span class="text-muted">No disponible</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

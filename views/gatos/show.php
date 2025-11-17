@@ -24,9 +24,7 @@
                     <p><strong>Sexo:</strong> <?php echo htmlspecialchars($gato->sexo); ?></p>
                     <p><strong>Colonia Actual:</strong>
                         <?php if ($gato->colonia_actual): ?>
-                            <a href="<?php echo url('colonias/show?id=' . htmlspecialchars($gato->idColoniaActual)); ?>">
-                                <?php echo htmlspecialchars($gato->colonia_actual); ?>
-                            </a>
+                            <?php echo htmlspecialchars($gato->colonia_actual); ?>
                         <?php else: ?>
                             Sin colonia asignada
                         <?php endif; ?>

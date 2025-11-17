@@ -6,22 +6,24 @@ class GrupoController {
     private $voluntarioModel; // Para gestionar miembros del grupo
 
     public function __construct() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden gestionar grupos
         $this->grupoModel = new Grupo();
         $this->voluntarioModel = new Voluntario();
     }
 
     public function index() {
+        AuthController::checkAyuntamientoAuth();
         $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
         $grupos = $this->grupoModel->getAllByAyuntamiento($ayuntamiento_id);
         require_once __DIR__ . '/../views/grupos/list.php';
     }
 
     public function create() {
+        AuthController::checkAyuntamientoAuth();
         require_once __DIR__ . '/../views/grupos/form.php';
     }
 
     public function store() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombreGrupo = $_POST['nombreGrupo'] ?? null;
             $idAyuntamiento = $_SESSION['ayuntamiento_id'];
@@ -39,22 +41,45 @@ class GrupoController {
     }
 
     public function show() {
+        AuthController::checkAuth(); // Requiere estar logueado
         $id = $_GET['id'] ?? null;
-        if ($id) {
-            $grupo = $this->grupoModel->getByIdWithDetails($id);
-            if ($grupo && $grupo->idAyuntamiento == $_SESSION['ayuntamiento_id']) {
-                $miembros = $this->grupoModel->getMembers($id);
-                $voluntariosDisponibles = $this->voluntarioModel->getDisponiblesParaGrupo($id, $grupo->idAyuntamiento);
-                require_once __DIR__ . '/../views/grupos/show.php';
-                return;
-            }
+        if (!$id) {
+            header('Location: ' . url('')); // Redirigir si no hay ID
+            exit();
         }
-        $_SESSION['error_message'] = 'Grupo no encontrado o no tienes permisos para verlo.';
-        header('Location: ' . url('grupos'));
+
+        $grupo = $this->grupoModel->getByIdWithDetails($id);
+        if (!$grupo) {
+            $_SESSION['error_message'] = 'Grupo no encontrado.';
+            header('Location: ' . ($_SESSION['user_type'] === 'ayuntamiento' ? url('grupos') : url('voluntarios/show?id=' . $_SESSION['user_id'])));
+            exit();
+        }
+
+        // Comprobar permisos
+        $tienePermiso = false;
+        if ($_SESSION['user_type'] === 'ayuntamiento' && $grupo->idAyuntamiento == $_SESSION['ayuntamiento_id']) {
+            $tienePermiso = true;
+        } elseif ($_SESSION['user_type'] === 'voluntario' && $this->grupoModel->isMember($id, $_SESSION['user_id'])) {
+            $tienePermiso = true;
+        }
+
+        if ($tienePermiso) {
+            $miembros = $this->grupoModel->getMembers($id);
+            $voluntariosDisponibles = [];
+            if ($_SESSION['user_type'] === 'ayuntamiento') {
+                $voluntariosDisponibles = $this->voluntarioModel->getDisponiblesParaGrupo($id, $grupo->idAyuntamiento);
+            }
+            require_once __DIR__ . '/../views/grupos/show.php';
+            return;
+        }
+
+        $_SESSION['error_message'] = 'No tienes permisos para ver este grupo.';
+        header('Location: ' . ($_SESSION['user_type'] === 'ayuntamiento' ? url('grupos') : url('voluntarios/show?id=' . $_SESSION['user_id'])));
         exit();
     }
 
     public function edit() {
+        AuthController::checkAyuntamientoAuth();
         $id = $_GET['id'] ?? null;
         if ($id) {
             $grupo = $this->grupoModel->getByIdWithDetails($id);
@@ -69,6 +94,7 @@ class GrupoController {
     }
 
     public function update() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGrupo = $_POST['idGrupo'] ?? null;
             $nombreGrupo = $_POST['nombreGrupo'] ?? null;
@@ -94,6 +120,7 @@ class GrupoController {
     }
 
     public function delete() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGrupo = $_POST['idGrupo'] ?? null;
 
@@ -118,6 +145,7 @@ class GrupoController {
     }
 
     public function addMiembro() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGrupo = $_POST['idGrupo'] ?? null;
             $idVoluntario = $_POST['idVoluntario'] ?? null;
@@ -139,6 +167,7 @@ class GrupoController {
     }
 
     public function removeMiembro() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGrupo = $_POST['idGrupo'] ?? null;
             $idVoluntario = $_POST['idVoluntario'] ?? null;
@@ -160,6 +189,7 @@ class GrupoController {
     }
 
     public function setResponsable() {
+        AuthController::checkAyuntamientoAuth();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idGrupo = $_POST['idGrupo'] ?? null;
             $idVoluntario = $_POST['idVoluntario'] ?? null;

@@ -37,8 +37,10 @@
         <h1>¡Bienvenido/a al Programa de Voluntariado!</h1>
         <p>Gracias por tu interés en colaborar con la gestión de colonias felinas. Tu ayuda es muy valiosa para el bienestar de nuestros gatos comunitarios.</p>
         <p>Para empezar, por favor, rellena el siguiente formulario con tus datos personales. Esto nos permitirá añadirte a la bolsa municipal de voluntarios del ayuntamiento que elijas.</p>
-        <a href="<?php echo url('interesados/public_create'); ?>" class="btn btn-success btn-lg">Ir al formulario de inscripción</a>
-        <a href="<?php echo url('login'); ?>" class="btn btn-secondary btn-lg mt-3">Volver al Login</a>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="<?php echo url('interesados/public_create'); ?>" class="btn btn-success btn-lg">Ir al formulario de inscripción</a>
+            <a href="<?php echo url('login'); ?>" class="btn btn-secondary btn-lg">Volver al Login</a>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>

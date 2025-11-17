@@ -70,9 +70,11 @@ class BackupController {
         // --- End mysqldump path determination ---
 
         // Construct the mysqldump command
+        // The --databases option includes CREATE DATABASE and USE statements
+        // --routines includes stored procedures, --events includes scheduled events
         $passArg = ($pass !== '') ? '--password=' . escapeshellarg($pass) : '';
         $command = sprintf(
-            '%s --user=%s %s --host=%s %s > %s 2>&1', // 2>&1 redirects stderr to stdout to capture errors
+            '%s --user=%s %s --host=%s --routines --events --databases %s --result-file=%s',
             $mysqldumpPath,
             escapeshellarg($user),
             $passArg,
@@ -84,7 +86,7 @@ class BackupController {
         // Execute the command
         $output = [];
         $return_var = -1;
-        exec($command, $output, $return_var);
+        exec($command . ' 2>&1', $output, $return_var); // Capture stderr for error reporting
 
         // Also call the stored procedure to log the backup attempt, as per requirements
         try {

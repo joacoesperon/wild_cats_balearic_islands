@@ -9,7 +9,6 @@ class VisitaController {
     private $gatoModel;
 
     public function __construct() {
-        AuthController::checkAuth(); // Ambos tipos de usuario pueden ver visitas
         $this->visitaModel = new Visita();
         $this->coloniaModel = new Colonia();
         $this->voluntarioModel = new Voluntario();
@@ -18,9 +17,23 @@ class VisitaController {
     }
 
     public function index() {
+        AuthController::checkAuth();
         $user_type = $_SESSION['user_type'];
         $user_id = $_SESSION['user_id'];
-        $visitas = $this->visitaModel->getAllWithDetails($user_type, $user_id);
+
+        if ($user_type === 'voluntario' && !empty($_SESSION['is_responsable'])) {
+            $visitas = $this->visitaModel->getVisitasGestionadas($user_id);
+            if (is_array($visitas)) {
+                foreach ($visitas as $visita) {
+                    $visita->is_editable = 1;
+                }
+            } else {
+                $visitas = [];
+            }
+        } else {
+            $visitas = $this->visitaModel->getAllWithDetails($user_type, $user_id);
+        }
+        
         require_once __DIR__ . '/../views/visitas/list.php';
     }
 
@@ -77,94 +90,123 @@ class VisitaController {
     }
 
     public function show() {
+        AuthController::checkAuth(); // Requiere estar logueado
         $id = $_GET['id'] ?? null;
-        if ($id) {
-            $visita = $this->visitaModel->getByIdWithDetails($id);
-            if ($visita) {
-                // Verificar permisos
-                if ($_SESSION['user_type'] === 'ayuntamiento' && $visita->idAyuntamiento != $_SESSION['ayuntamiento_id']) {
-                    $_SESSION['error_message'] = 'No tienes permisos para ver esta visita.';
-                    header('Location: ' . url('visitas'));
-                    exit();
-                }
-                // Para voluntarios, se debería verificar si el voluntario está asociado a la visita
-                // Por simplicidad, si es voluntario y la visita existe, se muestra.
-                // Una implementación más robusta requeriría una consulta para verificar VisitaVoluntario.
-
-                $voluntariosParticipantes = $this->visitaModel->getVoluntariosByVisitaId($id);
-
-                // Cargar incidencias de la visita
-                $incidenciaModel = new Incidencia();
-                $incidencias = $incidenciaModel->findByVisitaId($id);
-
-                require_once __DIR__ . '/../views/visitas/show.php';
-                return;
-            }
+        if (!$id) {
+            header('Location: ' . url('')); // Redirigir si no hay ID
+            exit();
         }
-        $_SESSION['error_message'] = 'Visita no encontrada.';
-        header('Location: ' . url('visitas'));
+
+        $visita = $this->visitaModel->getByIdWithDetails($id);
+        if (!$visita) {
+            $_SESSION['error_message'] = 'Visita no encontrada.';
+            header('Location: ' . ($_SESSION['user_type'] === 'ayuntamiento' ? url('visitas') : url('voluntarios/show?id=' . $_SESSION['user_id'])));
+            exit();
+        }
+
+        // Comprobar permisos
+        $tienePermiso = false;
+        if ($_SESSION['user_type'] === 'ayuntamiento' && $visita->idAyuntamiento == $_SESSION['ayuntamiento_id']) {
+            $tienePermiso = true;
+        } elseif ($_SESSION['user_type'] === 'voluntario' && $this->visitaModel->isParticipant($id, $_SESSION['user_id'])) {
+            $tienePermiso = true;
+        }
+
+        if ($tienePermiso) {
+            $voluntariosParticipantes = $this->visitaModel->getVoluntariosByVisitaId($id);
+            $incidenciaModel = new Incidencia();
+            $incidencias = $incidenciaModel->findByVisitaId($id);
+            require_once __DIR__ . '/../views/visitas/show.php';
+            return;
+        }
+
+        $_SESSION['error_message'] = 'No tienes permisos para ver esta visita.';
+        header('Location: ' . ($_SESSION['user_type'] === 'ayuntamiento' ? url('visitas') : url('voluntarios/show?id=' . $_SESSION['user_id'])));
         exit();
     }
 
     public function edit() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden editar visitas
+        AuthController::checkResponsableOrAyuntamientoAuth();
         $id = $_GET['id'] ?? null;
-        if ($id) {
-            $visita = $this->visitaModel->getByIdWithDetails($id);
-            if ($visita && $visita->idAyuntamiento == $_SESSION['ayuntamiento_id']) {
-                        if ($_SESSION['user_type'] === 'ayuntamiento') {
-                            $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
-                            $colonias = $this->coloniaModel->getAllWithDetails($ayuntamiento_id);
-                            $voluntarios = $this->voluntarioModel->getAllByAyuntamiento($ayuntamiento_id);
-                                } else { // Es un voluntario responsable
-                                    $colonias = $this->coloniaModel->getColoniasForResponsable($_SESSION['user_id']);
-                                    $voluntarios = $this->voluntarioModel->getVoluntariosManagedByResponsable($_SESSION['user_id']);
-                                    // --- DEBUG LOG ---
-                                    $log_message = "Timestamp: " . date("Y-m-d H:i:s") . "\n";
-                                    $log_message .= "Responsable ID: " . $_SESSION['user_id'] . "\n";
-                                    $log_message .= "Voluntarios obtenidos: " . print_r($voluntarios, true) . "\n\n";
-                                    file_put_contents(__DIR__ . '/../debug_voluntarios.log', $log_message, FILE_APPEND);
-                                    // --- FIN DEBUG LOG ---
-                                }                $voluntariosParticipantes = $this->visitaModel->getVoluntariosByVisitaId($id);
-                $voluntariosSeleccionados = array_map(function($v) { return $v->idVoluntario; }, $voluntariosParticipantes);
-
-                // No se permite editar incidencias desde aquí en esta versión
-                $tipos_incidencia = [];
-                $gatos = [];
-
-                require_once __DIR__ . '/../views/visitas/form.php';
-                return;
-            }
+        if (!$id) {
+            header('Location: ' . url('visitas'));
+            exit();
         }
-        $_SESSION['error_message'] = 'Visita no encontrada o no tienes permisos para editarla.';
+
+        $visita = $this->visitaModel->getByIdWithDetails($id);
+        if (!$visita) {
+            $_SESSION['error_message'] = 'Visita no encontrada.';
+            header('Location: ' . url('visitas'));
+            exit();
+        }
+
+        // Comprobar permisos de edición
+        $tienePermiso = false;
+        if ($_SESSION['user_type'] === 'ayuntamiento' && $visita->idAyuntamiento == $_SESSION['ayuntamiento_id']) {
+            $tienePermiso = true;
+        } elseif ($_SESSION['user_type'] === 'voluntario' && !empty($_SESSION['is_responsable']) && $this->visitaModel->canResponsableEdit($id, $_SESSION['user_id'])) {
+            $tienePermiso = true;
+        }
+
+        if ($tienePermiso) {
+            if ($_SESSION['user_type'] === 'ayuntamiento') {
+                $ayuntamiento_id = $_SESSION['ayuntamiento_id'];
+                $colonias = $this->coloniaModel->getAllWithDetails($ayuntamiento_id);
+                $voluntarios = $this->voluntarioModel->getAllByAyuntamiento($ayuntamiento_id);
+            } else { // Es un voluntario responsable
+                $colonias = $this->coloniaModel->getColoniasForResponsable($_SESSION['user_id']);
+                $voluntarios = $this->voluntarioModel->getVoluntariosManagedByResponsable($_SESSION['user_id']);
+            }
+            $voluntariosParticipantes = $this->visitaModel->getVoluntariosByVisitaId($id);
+            $voluntariosSeleccionados = array_map(function($v) { return $v->idVoluntario; }, $voluntariosParticipantes);
+            $tipos_incidencia = [];
+            $gatos = [];
+            require_once __DIR__ . '/../views/visitas/form.php';
+            return;
+        }
+
+        $_SESSION['error_message'] = 'No tienes permisos para editar esta visita.';
         header('Location: ' . url('visitas'));
         exit();
     }
 
     public function update() {
-        AuthController::checkAyuntamientoAuth(); // Solo ayuntamientos pueden actualizar visitas
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $idVisita = $_POST['idVisita'] ?? null;
-            $fechaVisita = $_POST['fechaVisita'] ?? null;
-            $idColonia = $_POST['idColonia'] ?? null;
-            $voluntarios = $_POST['voluntarios'] ?? [];
+        AuthController::checkResponsableOrAyuntamientoAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . url('visitas'));
+            exit();
+        }
 
-            // Verificar que la visita pertenece al ayuntamiento logueado
-            $visitaExistente = $this->visitaModel->getByIdWithDetails($idVisita);
-            if (!$visitaExistente || $visitaExistente->idAyuntamiento != $_SESSION['ayuntamiento_id']) {
-                $_SESSION['error_message'] = 'No tienes permisos para actualizar esta visita.';
-                header('Location: ' . url('visitas'));
-                exit();
-            }
+        $idVisita = $_POST['idVisita'] ?? null;
+        $fechaVisita = $_POST['fechaVisita'] ?? null;
+        $idColonia = $_POST['idColonia'] ?? null;
+        $voluntarios = $_POST['voluntarios'] ?? [];
 
-            // La lógica de incidencias no se actualiza en esta pantalla para simplificar
-            if ($this->visitaModel->updateVisita($idVisita, $fechaVisita, $idColonia, $voluntarios)) {
-                $_SESSION['success_message'] = 'Visita actualizada correctamente.';
-                header('Location: ' . url('visitas'));
-                exit();
-            } else {
-                $_SESSION['error_message'] = 'Error al actualizar la visita.';
-            }
+        $visitaExistente = $this->visitaModel->getByIdWithDetails($idVisita);
+        if (!$visitaExistente) {
+            $_SESSION['error_message'] = 'Visita no encontrada.';
+            header('Location: ' . url('visitas'));
+            exit();
+        }
+
+        // Comprobar permisos de actualización
+        $tienePermiso = false;
+        if ($_SESSION['user_type'] === 'ayuntamiento' && $visitaExistente->idAyuntamiento == $_SESSION['ayuntamiento_id']) {
+            $tienePermiso = true;
+        } elseif ($_SESSION['user_type'] === 'voluntario' && !empty($_SESSION['is_responsable']) && $this->visitaModel->canResponsableEdit($idVisita, $_SESSION['user_id'])) {
+            $tienePermiso = true;
+        }
+
+        if (!$tienePermiso) {
+            $_SESSION['error_message'] = 'No tienes permisos para actualizar esta visita.';
+            header('Location: ' . url('visitas'));
+            exit();
+        }
+
+        if ($this->visitaModel->updateVisita($idVisita, $fechaVisita, $idColonia, $voluntarios)) {
+            $_SESSION['success_message'] = 'Visita actualizada correctamente.';
+        } else {
+            $_SESSION['error_message'] = 'Error al actualizar la visita.';
         }
         header('Location: ' . url('visitas'));
         exit();

@@ -1,6 +1,6 @@
 # Proyecto de Gestión de Colonias Felinas - Mallorca
 
-Este proyecto implementa una aplicación web para la gestión de colonias de gatos comunitarios en Mallorca, siguiendo los requisitos de la "Opción 1" del enunciado. La aplicación está desarrollada en PHP nativo con MySQL y Apache, diseñada para ser portable y funcionar en un entorno XAMPP.
+Este proyecto implementa una aplicación web para la gestión de colonias de gatos comunitarios en Mallorca, siguiendo los requisitos del enunciado. La aplicación está desarrollada en PHP nativo con MySQL y Apache, diseñada para ser portable y funcionar en un entorno XAMPP.
 
 ## Características Implementadas
 
@@ -15,13 +15,6 @@ Este proyecto implementa una aplicación web para la gestión de colonias de gat
     -   Funcionalidad para que los voluntarios puedan ver sus grupos, tareas y visitas asignadas, y marcar tareas como completadas.
 -   **Portabilidad**: Diseñado para funcionar directamente al copiar la carpeta en `xampp/htdocs/`.
 -   **Seguridad**: **NOTA IMPORTANTE: Por requisitos del enunciado, la seguridad es 0. No hay validación de entrada, contraseñas en texto plano, ni protección CSRF/HTTPS.**
-
-## Requisitos del Sistema
-
--   Servidor web Apache
--   PHP 7.4 o superior (con extensión `pdo_mysql` habilitada)
--   MySQL 5.7 o superior
--   XAMPP (recomendado para una configuración sencilla)
 
 ## Configuración del Proyecto
 
@@ -115,7 +108,3 @@ La sección de 'Incidencias' ha sido dividida en dos páginas para mayor clarida
 
 1.  **Incidencias Ocurridas**: Un listado histórico de todas las incidencias que han sido registradas durante las visitas. Permite ver qué pasó, cuándo y dónde.
 2.  **Gestión de Tipos**: (Solo para Ayuntamientos) Un CRUD simple para administrar los *tipos* de incidencias que pueden ser seleccionados al registrar una nueva ocurrencia. Por ejemplo: 'Gato enfermo', 'Falta de comida', etc.
-
-## Contacto
-
-Para cualquier duda o problema, contacta con el desarrollador.

@@ -27,7 +27,7 @@ class Visita extends BaseModel {
             $query .= " JOIN VisitaVoluntario vv ON v.idVisita = vv.idVisita WHERE vv.idVoluntario = :user_id";
             $params[':user_id'] = $user_id;
         }
-        $query .= " ORDER BY v.fechaVisita DESC";
+        $query .= " ORDER BY v.fechaVisita DESC, v.idVisita DESC";
         return $this->executeQuery($query, $params);
     }
 
@@ -226,5 +226,66 @@ class Visita extends BaseModel {
             error_log("Error al eliminar visita: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Verifica si un voluntario participó en una visita específica.
+     * @param int $idVisita
+     * @param int $idVoluntario
+     * @return bool
+     */
+    public function isParticipant($idVisita, $idVoluntario) {
+        $query = "SELECT 1 FROM VisitaVoluntario WHERE idVisita = :idVisita AND idVoluntario = :idVoluntario LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':idVisita', $idVisita);
+        $stmt->bindParam(':idVoluntario', $idVoluntario);
+        $stmt->execute();
+        return $stmt->fetchColumn() !== false;
+    }
+
+    public function getVisitasParticipadas($idVoluntario) {
+        $query = "
+            SELECT v.idVisita, v.fechaVisita, c.descripcion AS colonia_nombre, a.nombreLocalidad AS ayuntamiento_nombre
+            FROM Visita v
+            JOIN VisitaVoluntario vv ON v.idVisita = vv.idVisita
+            JOIN Colonia c ON v.idColonia = c.idColonia
+            JOIN Ayuntamiento a ON c.idAyuntamiento = a.idAyuntamiento
+            WHERE vv.idVoluntario = :idVoluntario
+        ";
+        return $this->executeQuery($query, [':idVoluntario' => $idVoluntario]);
+    }
+
+    public function getVisitasGestionadas($idResponsable) {
+        $query = "
+            SELECT v.idVisita, v.fechaVisita, c.descripcion AS colonia_nombre, a.nombreLocalidad AS ayuntamiento_nombre
+            FROM Visita v
+            JOIN Colonia c ON v.idColonia = c.idColonia
+            JOIN Ayuntamiento a ON c.idAyuntamiento = a.idAyuntamiento
+            WHERE v.idColonia IN (
+                SELECT DISTINCT g.idColonia
+                FROM Grupo g
+                JOIN GrupoVoluntario gv ON g.idGrupo = gv.idGrupo
+                WHERE gv.idVoluntario = :idResponsable AND gv.es_responsable = 1
+            )
+        ";
+        return $this->executeQuery($query, [':idResponsable' => $idResponsable]);
+    }
+
+    public function canResponsableEdit($idVisita, $idResponsable) {
+        $query = "
+            SELECT 1
+            FROM Visita v
+            JOIN Grupo g ON v.idColonia = g.idColonia
+            JOIN GrupoVoluntario gv ON g.idGrupo = gv.idGrupo
+            WHERE v.idVisita = :idVisita
+            AND gv.idVoluntario = :idResponsable
+            AND gv.es_responsable = 1
+            LIMIT 1
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':idVisita', $idVisita);
+        $stmt->bindParam(':idResponsable', $idResponsable);
+        $stmt->execute();
+        return $stmt->fetchColumn() !== false;
     }
 }
